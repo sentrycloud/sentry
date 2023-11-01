@@ -1,0 +1,9 @@
+.idea
+logs
+cmd/sentry_agent/scripts
+cmd/sentry_agent/sentry_agent
+cmd/sentry_agent/SentryAgent.conf
+cmd/sentry_server/sentry_server
+cmd/sentry_server/SentryServer.conf
+cmd/sentry_alarm/sentry_alarm
+cmd/sentry_alarm/SentryAlarm.conf
