@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-// separate connection pool for query and write
+// separate connection pool for query
 var connPool *taos.ConnPool
 var serverCollector *collector.Collector
 
@@ -24,14 +24,13 @@ func Start(serverConfig *config.ServerConfig, server *collector.Collector) {
 	mux.HandleFunc(protocol.TagValueUrl, queryTagValues)
 	mux.HandleFunc(protocol.CurveUrl, queryCurves)
 	mux.HandleFunc(protocol.RangeUrl, queryTimeSeriesDataForRange)
-	mux.HandleFunc(protocol.LastUrl, queryTimeSeriesDataForLast)
 	mux.HandleFunc(protocol.TopNUrl, queryTopn)
 
 	connPool = taos.CreateConnPool(serverConfig.TaosServer)
 	serverCollector = server
 
+	newlog.Info("listen on http port: %d", serverConfig.HttpPort)
 	go func() {
-		newlog.Info("listen on http port: %d", serverConfig.HttpPort)
 		log.Fatal(http.ListenAndServe("0.0.0.0:"+strconv.Itoa(serverConfig.HttpPort), mux))
 	}()
 }

@@ -13,7 +13,6 @@ const (
 	TagValueUrl = "/server/api/tagValues"
 	CurveUrl    = "/server/api/curves"
 	RangeUrl    = "/server/api/range"
-	LastUrl     = "/server/api/last"
 	TopNUrl     = "/server/api/topn"
 
 	PutMetricsUrl = "/server/api/putMetrics"
@@ -31,7 +30,7 @@ type TimeSeriesDataRequest struct {
 	End        int64       `json:"end"`
 	Last       int64       `json:"last"`
 	Aggregator string      `json:"aggregator"`
-	DownSample int         `json:"down_sample"`
+	DownSample int64       `json:"down_sample"`
 	Metrics    []MetricReq `json:"metrics"`
 }
 
@@ -56,6 +55,7 @@ type TopNRequest struct {
 	Token      string              `json:"token"`
 	Start      int64               `json:"start"`
 	End        int64               `json:"end"`
+	Last       int64               `json:"last"`
 	Aggregator string              `json:"aggregator"`
 	DownSample int64               `json:"down_sample"`
 	Limit      int                 `json:"limit"`

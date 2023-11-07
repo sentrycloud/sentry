@@ -10,10 +10,7 @@ import (
 
 func queryCurves(w http.ResponseWriter, r *http.Request) {
 	var req protocol.MetricReq
-	var resp = protocol.QueryResp{
-		Code: 0,
-		Msg:  "ok",
-	}
+	var resp = protocol.QueryResp{}
 	err := protocol.Json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		newlog.Error("queryCurves: decode query request failed: %v", err)
@@ -33,10 +30,13 @@ func queryCurves(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var curveList []map[string]string
-	resp.Data = curveList
 	if len(starTags) == 0 {
 		newlog.Info("queryCurves: no star tags ")
 		curveList = append(curveList, noStarTags)
+
+		resp.Code = CodeOK
+		resp.Msg = CodeMsg[CodeOK]
+		resp.Data = curveList
 		writeQueryResp(w, http.StatusOK, &resp)
 		return
 	}

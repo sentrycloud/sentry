@@ -143,7 +143,7 @@ func (c *Collector) transferMetric(metric *protocol.MetricValue) {
 			metric.Tags[newK] = v
 		}
 
-		// these are reserved for the only two field name, version 2.x or 3.x
+		// these are reserved for taos field name, version 2.x or 3.x
 		if k == "ts" || k == "value" || k == "_ts" || k == "_value" {
 			delete(metric.Tags, k)
 			newK := k + "_"

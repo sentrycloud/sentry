@@ -32,10 +32,11 @@ func main() {
 	var merger = merge.CreateMerge(serverConfig.Merge, connPool)
 	merger.Start()
 
-	// start the server
+	// start the tcp collector server
 	var server = collector.Collector{}
 	server.Start(serverConfig, merger)
 
+	// start the http collector and query server
 	http.Start(&serverConfig, &server)
 
 	newlog.Info("sentry server start complete in %d ms", time.Now().UnixMilli()-startTime)

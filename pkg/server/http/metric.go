@@ -9,6 +9,8 @@ import (
 	"net/http"
 )
 
+// query all metrics that start with the name in the request
+// TODO: all query process have some common code that can be extract by functions or macro, but I think the code is more readable in the current form
 func queryMetrics(w http.ResponseWriter, r *http.Request) {
 	var m protocol.MetricReq
 	var resp = protocol.QueryResp{}

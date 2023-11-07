@@ -37,7 +37,7 @@ func (p *ConnPool) GetConn() (*af.Connector, error) {
 	} else {
 		var err error
 		conn, err = af.Open(p.TaosServer.Host, p.TaosServer.User, p.TaosServer.Password, p.TaosServer.Database, p.TaosServer.Port)
-		if err != nil && err.Error() != "success" {
+		if err != nil {
 			newlog.Error("open taos connection failed: %v", err)
 			return nil, fmt.Errorf("open taos connection failed: %v", err)
 		}

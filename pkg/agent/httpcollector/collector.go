@@ -23,8 +23,8 @@ func Start(report *reporter.Reporter, httpPort int) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/agent/api/putMetrics", putMetricsHandler)
 
+	newlog.Info("Listen on http port %d", httpPort)
 	go func() {
-		newlog.Info("Listen on http port %d", httpPort)
 		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", httpPort), mux)
 		if err != nil {
 			newlog.Fatal("Listen on http port %d failed: %v", httpPort, err)

@@ -2,7 +2,7 @@ package taos
 
 import (
 	"fmt"
-	"sentry/internal/server/config"
+	"github.com/sentrycloud/sentry/pkg/server/config"
 	"testing"
 	"time"
 )

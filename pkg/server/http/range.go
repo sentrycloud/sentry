@@ -53,7 +53,7 @@ func queryTimeSeriesDataForRange(w http.ResponseWriter, r *http.Request) {
 
 		var dataPoints []protocol.TimeValuePoint
 		for {
-			values := make([]driver.Value, 2) // field, type, length, note
+			values := make([]driver.Value, 2) // timestamp, value
 			if rows.Next(values) != nil {
 				break
 			}

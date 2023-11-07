@@ -51,6 +51,7 @@ func (s *Scheduler) run() {
 	}
 
 	if len(out) == 0 {
+		newlog.Warn("run %s success, but with no metrics output", s.script.path)
 		return
 	}
 

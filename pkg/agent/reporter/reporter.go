@@ -94,7 +94,10 @@ func (r *Reporter) processMetrics(metrics []protocol.MetricValue) {
 			continue
 		}
 
-		metric.Tags["ip"] = r.localIP // automatic add local ip to tags
+		_, exist := metric.Tags["ip"]
+		if !exist {
+			metric.Tags["ip"] = r.localIP // if tags not contain ip, agent add local ip to tags
+		}
 
 		if len(r.metricList) > MaxMetricSize {
 			newlog.Error("discard metric data, cause the cache list is full")
@@ -106,6 +109,7 @@ func (r *Reporter) processMetrics(metrics []protocol.MetricValue) {
 }
 
 func (r *Reporter) sendMetrics(fromTicker bool) {
+	// if the connection is not valid, only ticker can trigger reconnect, so the reconnect will not too frequently
 	if r.conn == nil && fromTicker {
 		r.tryConnect()
 	}
@@ -114,7 +118,9 @@ func (r *Reporter) sendMetrics(fromTicker bool) {
 		return
 	}
 
-	if fromTicker || len(r.metricList) > SendMetricBatchSize {
+	// try to send data in batch mode or in every tick, to improve payload send efficiency
+	// TODO: if the metricList is too long, split the list and send data
+	if fromTicker || len(r.metricList) >= SendMetricBatchSize {
 		data, err := protocol.SerializeMetricValues(r.metricList)
 		if err != nil {
 			newlog.Error("SerializeMetricValues failed: %v", err)

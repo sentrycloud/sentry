@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+// query all tags of a metric
 func queryTagKeys(w http.ResponseWriter, r *http.Request) {
 	var m protocol.MetricReq
 	var resp = protocol.QueryResp{}

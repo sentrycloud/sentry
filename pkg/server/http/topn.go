@@ -51,7 +51,7 @@ func queryTopn(w http.ResponseWriter, r *http.Request) {
 
 	var topNDataList []protocol.TopNData
 	for {
-		values := make([]driver.Value, 2) // field, type, length, note
+		values := make([]driver.Value, 2) // tag, value
 		if rows.Next(values) != nil {
 			break
 		}

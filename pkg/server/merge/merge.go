@@ -66,14 +66,17 @@ func (m *Merge) appendPayload(payload string) {
 }
 
 func (m *Merge) trySendPayload(fromTick bool) {
+	// no metrics to send to taos server
 	if len(m.resendBuffer) == 0 && m.mergeBuffer.Len() == 0 {
 		return
 	}
 
+	// not accumulated enough metrics
 	if !fromTick && len(m.resendBuffer) == 0 && m.mergeBuffer.Len() < m.conf.PayloadBatchSize {
 		return
 	}
 
+	// resend failed metrics first
 	if len(m.resendBuffer) > 0 {
 		for _, payload := range m.resendBuffer {
 			go m.sendPayload(payload)
@@ -82,6 +85,7 @@ func (m *Merge) trySendPayload(fromTick bool) {
 		m.resendBuffer = nil
 	}
 
+	// send new metrics in batch mode
 	if m.mergeBuffer.Len() >= m.conf.PayloadBatchSize || fromTick {
 		m.mergeBuffer.WriteString("]") // enclose metric list with [ ]
 		go m.sendPayload(m.mergeBuffer.String())

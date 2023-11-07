@@ -25,6 +25,7 @@ func (m *MetricValue) IsValid() bool {
 
 	if !validNameRegExp.MatchString(m.Metric) {
 		newlog.Error("metric=%s is not valid", m.Metric)
+		return false
 	}
 
 	for k, v := range m.Tags {
@@ -35,6 +36,7 @@ func (m *MetricValue) IsValid() bool {
 
 		if !validNameRegExp.MatchString(k) {
 			newlog.Error("tag=%s of metric=%s is not valid", k, m.Metric)
+			return false
 		}
 	}
 

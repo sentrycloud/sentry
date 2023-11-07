@@ -84,7 +84,7 @@ func splitTags(tags map[string]string) (map[string]string, map[string]string, er
 	return starTags, noStarTags, nil
 }
 
-// all metric and tag key will use “ to use the original name
+// all metric and tag key will be included in “ to use the original name
 func buildCurvesRequest(metric string, tags map[string]string, starTags map[string]string) (string, []string) {
 	sqlFormat := "SELECT DISTINCT `%s` FROM `%s` WHERE %s;"
 
@@ -121,66 +121,107 @@ func buildCurvesRequest(metric string, tags map[string]string, starTags map[stri
 	return fmt.Sprintf(sqlFormat, selectKeys, metric, condition.String()), starKeys
 }
 
-func transferTimeSeriesDataRequest(req *protocol.TimeSeriesDataRequest) int {
-	if req.Last != 0 {
-		if req.Last > MaxQueryRange {
+func checkAndTransferTime(last int64, start *int64, end *int64) int {
+	if last != 0 {
+		// request with last field, so time range will be [now - last, now)
+		if last > MaxQueryRange {
 			return CodeMaxQueryRangeError
 		}
 
-		req.End = time.Now().Unix()
-		req.Start = req.End - req.Last
+		*end = time.Now().Unix()
+		*start = *end - last
 	} else {
-		if req.Start > req.End {
-			req.Start, req.End = req.End, req.Start // swap the start and end time
+		// request with start and end fields, so time range will be [start, end)
+		if *start > *end {
+			*start, *end = *end, *start // swap the start and end time when start > end
 		}
 
-		if req.End-req.Start > MaxQueryRange {
+		if *end-*start > MaxQueryRange {
 			return CodeMaxQueryRangeError
 		}
 	}
 
-	// alignment with down sample
-	req.Start = req.Start / int64(req.DownSample) * int64(req.DownSample) * 1000
-	if req.End%int64(req.DownSample) == 0 {
-		req.End -= 1
-	}
-	req.End *= 1000
+	return CodeOK
+}
 
-	req.Aggregator = strings.ToLower(req.Aggregator)
-	if (req.Aggregator != "sum") && (req.Aggregator != "avg") && (req.Aggregator != "max") && (req.Aggregator != "min") {
-		return CodeAggregatorError
-	}
-
-	if req.DownSample == 0 || req.DownSample > MaxDownSample {
+func alignWithDownSample(downSample int64, start *int64, end *int64) int {
+	if downSample == 0 || downSample > MaxDownSample {
 		return CodeDownSampleError
 	}
 
+	*start = *start / downSample * downSample * 1000
+	if *end%downSample == 0 {
+		*end -= 1
+	}
+	*end *= 1000
+	return CodeOK
+}
+
+func checkAggregator(aggregator string) (string, int) {
+	aggregator = strings.ToLower(aggregator)
+	if (aggregator != "sum") && (aggregator != "avg") && (aggregator != "max") && (aggregator != "min") {
+		return aggregator, CodeAggregatorError
+	}
+	return aggregator, CodeOK
+}
+
+func splitTagFilters(metric string, reqTags map[string]string) (string, map[string]string, map[string][]string, int) {
+	if len(metric) == 0 {
+		return "", nil, nil, CodeMetricError
+	}
+
+	if len(reqTags) > MaxTagCount {
+		return "", nil, nil, CodeTagCountError
+	}
+
+	var starKey string
+	tags := make(map[string]string)
+	filters := make(map[string][]string)
+	for k, v := range reqTags {
+		if strings.Contains(k, "*") {
+			return "", nil, nil, CodeStarKeysError
+		}
+
+		if strings.Contains(v, "*") {
+			starKey = k
+			continue
+		}
+
+		if strings.Contains(v, "||") {
+			filters[k] = strings.Split(v, "||")
+		} else {
+			tags[k] = v
+		}
+	}
+
+	return starKey, tags, filters, CodeOK
+}
+
+func transferTimeSeriesDataRequest(req *protocol.TimeSeriesDataRequest) int {
+	code := checkAndTransferTime(req.Last, &req.Start, &req.End)
+	if code != CodeOK {
+		return code
+	}
+
+	code = alignWithDownSample(req.DownSample, &req.Start, &req.End)
+	if code != CodeOK {
+		return code
+	}
+
+	req.Aggregator, code = checkAggregator(req.Aggregator)
+	if code != CodeOK {
+		return code
+	}
+
 	for _, m := range req.Metrics {
-		if len(m.Metric) == 0 {
-			return CodeMetricError
+		var starKey string
+		starKey, m.Tags, m.Filters, code = splitTagFilters(m.Metric, m.Tags)
+		if code != CodeOK {
+			return code
 		}
 
-		if len(m.Tags) > MaxTagCount {
-			return CodeTagCountError
-		}
-
-		tags := make(map[string]string)
-		filters := make(map[string][]string)
-		for k, v := range m.Tags {
-			if strings.Contains(k, "*") || strings.Contains(v, "*") {
-				return CodeStarKeysError
-			}
-
-			if strings.Contains(v, "||") {
-				filters[k] = strings.Split(v, "||")
-			} else {
-				tags[k] = v
-			}
-		}
-
-		if len(filters) > 0 {
-			m.Tags = tags
-			m.Filters = filters
+		if len(starKey) > 0 {
+			return CodeStarKeysError
 		}
 	}
 
@@ -188,24 +229,19 @@ func transferTimeSeriesDataRequest(req *protocol.TimeSeriesDataRequest) int {
 }
 
 func transferTopnRequest(req *protocol.TopNRequest) int {
-	if req.Start > req.End {
-		req.Start, req.End = req.End, req.Start // swap the start and end time
+	code := checkAndTransferTime(req.Last, &req.Start, &req.End)
+	if code != CodeOK {
+		return code
 	}
 
-	if req.End-req.Start > MaxQueryRange {
-		return CodeMaxQueryRangeError
+	code = alignWithDownSample(req.DownSample, &req.Start, &req.End)
+	if code != CodeOK {
+		return code
 	}
 
-	// alignment with down sample
-	req.Start = req.Start / int64(req.DownSample) * int64(req.DownSample) * 1000
-	if req.End%int64(req.DownSample) == 0 {
-		req.End -= 1
-	}
-	req.End *= 1000
-
-	req.Aggregator = strings.ToLower(req.Aggregator)
-	if (req.Aggregator != "sum") && (req.Aggregator != "avg") && (req.Aggregator != "max") && (req.Aggregator != "min") {
-		return CodeAggregatorError
+	req.Aggregator, code = checkAggregator(req.Aggregator)
+	if code != CodeOK {
+		return code
 	}
 
 	if len(req.Order) == 0 {
@@ -216,44 +252,14 @@ func transferTopnRequest(req *protocol.TopNRequest) int {
 		return CodeOrderError
 	}
 
-	if req.DownSample == 0 || req.DownSample > MaxDownSample {
-		return CodeDownSampleError
-	}
-
-	if len(req.Metric) == 0 {
-		return CodeMetricError
-	}
-
-	if len(req.Tags) > MaxTagCount {
-		return CodeTagCountError
-	}
-
-	tags := make(map[string]string)
-	filters := make(map[string][]string)
-	for k, v := range req.Tags {
-		if v == "*" {
-			if len(req.Field) == 0 {
-				req.Field = k
-				continue
-			} else {
-				return CodeStarKeysError
-			}
-		}
-
-		if strings.Contains(v, "||") {
-			filters[k] = strings.Split(v, "||")
-		} else {
-			tags[k] = v
-		}
+	req.Field, req.Tags, req.Filters, code = splitTagFilters(req.Metric, req.Tags)
+	if code != CodeOK {
+		return code
 	}
 
 	if len(req.Field) == 0 {
 		return CodeStarKeysError
 	}
-
-	req.Tags = tags
-	req.Filters = filters
-
 	return CodeOK
 }
 
@@ -329,21 +335,18 @@ func quoteValue(v string) string {
 	return v
 }
 
-func buildRangeQuerySql(start int64, end int64, aggregator string, downSample int, req *protocol.MetricReq) string {
+func buildRangeQuerySql(start int64, end int64, aggregator string, downSample int64, req *protocol.MetricReq) string {
 	tagsCondition := tagsToCondition(req.Tags)
 	if len(req.Filters) > 0 {
 		tagsCondition += " AND " + filterTagsToCondition(req.Filters)
 	}
 
-	var sql string
-	if len(tagsCondition) == 0 {
-		sqlFormat := "SELECT CAST(FIRST(_ts) as BIGINT),%s(_value) FROM `%s` WHERE _ts > %d AND _ts < %d INTERVAL(%ds)"
-		sql = fmt.Sprintf(sqlFormat, aggregator, req.Metric, start, end, downSample)
-	} else {
-		sqlFormat := "SELECT CAST(FIRST(_ts) as BIGINT),%s(_value) FROM `%s` WHERE _ts > %d AND _ts < %d AND %s INTERVAL(%ds)"
-		sql = fmt.Sprintf(sqlFormat, aggregator, req.Metric, start, end, tagsCondition, downSample)
+	if len(tagsCondition) > 0 {
+		tagsCondition = " AND " + tagsCondition
 	}
-	return sql
+
+	sqlFormat := "SELECT CAST(FIRST(_ts) as BIGINT),%s(_value) FROM `%s` WHERE _ts > %d AND _ts < %d %s INTERVAL(%ds)"
+	return fmt.Sprintf(sqlFormat, aggregator, req.Metric, start, end, tagsCondition, downSample)
 }
 
 func buildTopnQuerySql(req *protocol.TopNRequest) string {
@@ -356,7 +359,6 @@ func buildTopnQuerySql(req *protocol.TopNRequest) string {
 		tagsCondition = " AND " + tagsCondition
 	}
 
-	sqlFormat := "SELECT `%s`,v FROM (SELECT `%s`,%s(_value) as v FROM `%s` WHERE _ts > %d AND _ts < %d %s AND `%s` IS NOT NULL GROUP BY `%s`)" +
-		" order by v %s limit %d;"
+	sqlFormat := "SELECT `%s`,v FROM (SELECT `%s`,%s(_value) as v FROM `%s` WHERE _ts > %d AND _ts < %d %s AND `%s` IS NOT NULL GROUP BY `%s`) order by v %s limit %d;"
 	return fmt.Sprintf(sqlFormat, req.Field, req.Field, req.Aggregator, req.Metric, req.Start, req.End, tagsCondition, req.Field, req.Field, req.Order, req.Limit)
 }

@@ -25,6 +25,7 @@ func StartScriptScheduler(scriptDirs string, scriptType string, report *reporter
 	for _, script := range scripts {
 		interval, err := getScheduleInterval(scriptType, script)
 		if err != nil {
+			newlog.Error("getScheduleInterval failed: %v, skip this script: %s", err, script)
 			continue
 		}
 		s := &Script{path: script, scriptType: scriptType, interval: interval}
@@ -36,6 +37,7 @@ func StartScriptScheduler(scriptDirs string, scriptType string, report *reporter
 func getScheduleInterval(scriptType string, script string) (int, error) {
 	out, err := RunCommand(10, scriptType, script, "sentry_time")
 	if err != nil {
+		newlog.Error("run command with sentry_time failed: %v", err)
 		return 0, err
 	}
 
