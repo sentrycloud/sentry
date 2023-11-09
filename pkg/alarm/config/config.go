@@ -16,6 +16,7 @@ type AlarmConfig struct {
 	ServerAddress string           `json:"server_address"`
 	Log           newlog.LogConfig `json:"log"`
 	Db            MySQLConfig      `json:"db"`
+	Mail          MailConfig       `json:"mail"`
 }
 
 type MySQLConfig struct {
@@ -25,6 +26,15 @@ type MySQLConfig struct {
 	Password string `json:"password"`
 	DBName   string `json:"db_name"`
 }
+
+type MailConfig struct {
+	SmtpHost string `json:"smtp_host"`
+	SmtpPort int    `json:"smtp_port"`
+	From     string `json:"from"`
+	Password string `json:"password"`
+}
+
+// TODO: missing config for sending phone message and IM message
 
 func (ac *AlarmConfig) ParseConfig(configPath string) {
 	content, err := os.ReadFile(configPath)

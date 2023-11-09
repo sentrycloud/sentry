@@ -50,6 +50,6 @@ INSERT INTO `alarm_rule` (`name`, `type`, `query_range`, `contacts`, `level`, `m
             '{"greater_than": 12.0, "error_count": 1}');
 
 INSERT INTO `alarm_rule` (`name`, `type`, `query_range`, `contacts`, `level`, `message`, `data_source`, `trigger`)
-VALUES ('memory usage alarm', 3, 60, 'eric', 1, '{time} memory usage reach {value}, history value: {history.value}, compare value: {compare.value}',
-        '{"metric":"sentry_sys_mem_usage", "tags":{"ip":"127.0.0.1"}, "aggregator":"max", "down_sample":10, "compare_type":0, "compare_days_ago":0, "compare_seconds":60}',
-        '{"less_than": -8.0, "greater_than": 8.0, "error_count": 1}');
+    VALUES ('memory usage alarm', 3, 60, 'eric', 1, '{time} memory usage reach {value}, history value: {history.value}, compare value: {compare.value}',
+            '{"metric":"sentry_sys_mem_usage", "tags":{"ip":"127.0.0.1"}, "aggregator":"max", "down_sample":10, "compare_type":0, "compare_days_ago":0, "compare_seconds":60}',
+            '{"less_than": -8.0, "greater_than": 8.0, "error_count": 1}');

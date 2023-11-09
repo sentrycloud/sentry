@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+const MaxTopNLimit = 100
+
 type TopNRule struct {
 	AlarmRule
 }
@@ -18,6 +20,17 @@ func (r *TopNRule) Parse() error {
 	err := r.AlarmRule.Parse()
 	if err != nil {
 		return err
+	}
+
+	r.alarmDataSource.Sort, err = protocol.CheckOrder(r.alarmDataSource.Sort)
+	if err != nil {
+		newlog.Error("wrong order for ruleId=%d, err: %v", r.Id, err)
+		return err
+	}
+
+	if r.alarmDataSource.Limit <= 0 || r.alarmDataSource.Limit > MaxTopNLimit {
+		newlog.Warn("set topN limit to default value for ruleId=%d", r.Id)
+		r.alarmDataSource.Limit = MaxTopNLimit
 	}
 
 	starCount := 0
@@ -49,7 +62,7 @@ func (r *TopNRule) Run() {
 		Metric:     r.alarmDataSource.Metric,
 		Tags:       r.alarmDataSource.Tags,
 		Aggregator: r.alarmDataSource.Aggregator,
-		DownSample: int64(r.alarmDataSource.DownSample),
+		DownSample: r.alarmDataSource.DownSample,
 		Order:      r.alarmDataSource.Sort,
 		Limit:      r.alarmDataSource.Limit,
 	}
@@ -63,7 +76,7 @@ func (r *TopNRule) Run() {
 	for _, topNData := range topNList {
 		if topNData.Value < r.alarmTrigger.LessThan || topNData.Value > r.alarmTrigger.GreaterThan {
 			alarmMessage := r.buildAlarmMessage(topNData.Metric, topNData.Tags, startTime, topNData.Value)
-			sender.WeChatMessage(alarmMessage)
+			sender.MailMessage(r.Contacts, alarmMessage)
 		}
 	}
 }

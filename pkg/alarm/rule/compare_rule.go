@@ -131,7 +131,7 @@ func (r *CompareRule) Run() {
 		if triggerCount >= r.alarmTrigger.ErrorCount {
 			alarmMessage := r.buildAlarmMessage(curveData.Metric, curveData.Tags, triggerTime, triggerValue)
 			alarmMessage = r.buildCompareAlarmMessage(alarmMessage, historyValue, triggerCompareValue)
-			sender.WeChatMessage(alarmMessage)
+			sender.MailMessage(r.Contacts, alarmMessage)
 		}
 	}
 }

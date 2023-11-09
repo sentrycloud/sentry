@@ -61,6 +61,7 @@ func (db *MySQL) QueryContacts() (map[string]Contact, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
 	alarmContacts := make(map[string]Contact)
 	for rows.Next() {
 		var contact Contact
@@ -83,6 +84,7 @@ func (db *MySQL) QueryAlarmRules() (map[int]Rule, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
 	alarmRules := make(map[int]Rule)
 	for rows.Next() {
 		var rule Rule

@@ -2,9 +2,11 @@ package protocol
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"io"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -70,6 +72,27 @@ type TopNData struct {
 	Metric string            `json:"metric"`
 	Tags   map[string]string `json:"tags"`
 	Value  float64           `json:"value"`
+}
+
+func CheckAggregator(aggregator string) (string, error) {
+	aggregator = strings.ToLower(aggregator)
+	if aggregator == "sum" || aggregator == "avg" || aggregator == "max" || aggregator == "min" {
+		return aggregator, nil
+	}
+	return aggregator, errors.New("no such aggregator: " + aggregator)
+}
+
+func CheckOrder(order string) (string, error) {
+	if len(order) == 0 {
+		return "desc", nil // default order is descendent
+	}
+
+	order = strings.ToLower(order)
+	if order == "desc" || order == "asc" {
+		return order, nil
+	}
+
+	return "", errors.New("no such order: " + order)
 }
 
 func CollectHttpMetrics(w http.ResponseWriter, req *http.Request) ([]MetricValue, error) {

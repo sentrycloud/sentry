@@ -6,6 +6,7 @@ import (
 	"github.com/sentrycloud/sentry/pkg/alarm/query"
 	"github.com/sentrycloud/sentry/pkg/alarm/rule"
 	"github.com/sentrycloud/sentry/pkg/alarm/schedule"
+	"github.com/sentrycloud/sentry/pkg/alarm/sender"
 	"github.com/sentrycloud/sentry/pkg/cmdflags"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/profile"
@@ -28,6 +29,8 @@ func main() {
 
 	query.InitServerAddr(alarmConfig.ServerAddress)
 
+	sender.InitMailConfig(&alarmConfig.Mail)
+
 	schedule.Start()
 	defer schedule.Stop()
 
@@ -39,7 +42,6 @@ func main() {
 	ruleManager := rule.NewManager(db)
 	ruleManager.Start()
 
-	// parse config file
 	newlog.Info("sentry alarm server start complete in %d ms", time.Now().UnixMilli()-startTime)
 	profile.StartProfileInBlockMode(alarmConfig.ProfilePort)
 }

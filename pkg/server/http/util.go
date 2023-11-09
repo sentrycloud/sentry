@@ -157,14 +157,6 @@ func alignWithDownSample(downSample int64, start *int64, end *int64) int {
 	return CodeOK
 }
 
-func checkAggregator(aggregator string) (string, int) {
-	aggregator = strings.ToLower(aggregator)
-	if (aggregator != "sum") && (aggregator != "avg") && (aggregator != "max") && (aggregator != "min") {
-		return aggregator, CodeAggregatorError
-	}
-	return aggregator, CodeOK
-}
-
 func splitTagFilters(metric string, reqTags map[string]string) (string, map[string]string, map[string][]string, int) {
 	if len(metric) == 0 {
 		return "", nil, nil, CodeMetricError
@@ -208,9 +200,10 @@ func transferTimeSeriesDataRequest(req *protocol.TimeSeriesDataRequest) int {
 		return code
 	}
 
-	req.Aggregator, code = checkAggregator(req.Aggregator)
-	if code != CodeOK {
-		return code
+	var err error
+	req.Aggregator, err = protocol.CheckAggregator(req.Aggregator)
+	if err != nil {
+		return CodeAggregatorError
 	}
 
 	for _, m := range req.Metrics {
@@ -239,16 +232,14 @@ func transferTopnRequest(req *protocol.TopNRequest) int {
 		return code
 	}
 
-	req.Aggregator, code = checkAggregator(req.Aggregator)
-	if code != CodeOK {
-		return code
+	var err error
+	req.Aggregator, err = protocol.CheckAggregator(req.Aggregator)
+	if err != nil {
+		return CodeAggregatorError
 	}
 
-	if len(req.Order) == 0 {
-		req.Order = "desc"
-	}
-	req.Order = strings.ToLower(req.Order)
-	if (req.Order != "desc") && (req.Order != "asc") {
+	req.Order, err = protocol.CheckOrder(req.Order)
+	if err != nil {
 		return CodeOrderError
 	}
 

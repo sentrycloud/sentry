@@ -1,7 +1,7 @@
 package query
 
 import (
-	"sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/protocol"
 	"testing"
 )
 

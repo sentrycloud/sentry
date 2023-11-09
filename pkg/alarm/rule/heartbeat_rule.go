@@ -24,8 +24,8 @@ func (r *HeartBeatRule) Parse() error {
 
 	for _, v := range r.alarmDataSource.Tags {
 		if strings.Contains(v, "*") {
-			newlog.Error("heart beat alarm rule has * tag for ruleId=%d", r.Id)
-			return errors.New("heart beat alarm rule has * tag")
+			newlog.Error("heartbeat alarm rule has * tag for ruleId=%d", r.Id)
+			return errors.New("heartbeat alarm rule has * tag")
 		}
 	}
 
@@ -60,7 +60,7 @@ func (r *HeartBeatRule) Run() {
 	for _, curveData := range curveDataList {
 		if len(curveData.DPS) == 0 {
 			alarmMessage := r.buildAlarmMessage(r.alarmDataSource.Metric, r.alarmDataSource.Tags, r.rangeRequest.Start, 0)
-			sender.WeChatMessage(alarmMessage)
+			sender.MailMessage(r.Contacts, alarmMessage)
 		}
 	}
 }

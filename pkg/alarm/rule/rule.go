@@ -6,7 +6,6 @@ import (
 	"github.com/RussellLuo/timingwheel"
 	"github.com/sentrycloud/sentry/pkg/alarm/mysql"
 	"github.com/sentrycloud/sentry/pkg/alarm/query"
-	"github.com/sentrycloud/sentry/pkg/alarm/schedule"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"math"
@@ -27,22 +26,22 @@ const (
 	CompareTypeRatio
 )
 
-const UpdateCurvesInterval = 600
-
-var Aggregators = map[string]int{"sum": 1, "avg": 1, "max": 1, "min": 1}
-var Sorts = map[string]int{"asc": 1, "desc": 1}
+const (
+	UpdateCurvesInterval = 600
+	AlarmQueryDelay      = 10 // the end of query time range is 10 seconds ago
+)
 
 type BaseRule interface {
+	Parse() error
 	Start()
 	Stop()
-	Parse() error
 	Run()
 }
 
 type AlarmDataSource struct {
 	Metric         string            `json:"metric"`
 	Tags           map[string]string `json:"tags"`
-	DownSample     int               `json:"down_sample"`
+	DownSample     int64             `json:"down_sample"`
 	Aggregator     string            `json:"aggregator"`
 	Sort           string            `json:"sort"`             // use for topN rule only
 	Limit          int               `json:"limit"`            // use for topN rule only
@@ -109,10 +108,10 @@ func (r *AlarmRule) Parse() error {
 		}
 	}
 
-	r.alarmDataSource.Aggregator = strings.ToLower(r.alarmDataSource.Aggregator)
-	if _, exist := Aggregators[r.alarmDataSource.Aggregator]; !exist {
+	r.alarmDataSource.Aggregator, err = protocol.CheckAggregator(r.alarmDataSource.Aggregator)
+	if err != nil {
 		newlog.Error("no such aggregator=%s for ruleId=%d", r.alarmDataSource.Aggregator, r.Id)
-		return errors.New("no such aggregator")
+		return err
 	}
 
 	if r.alarmDataSource.DownSample < 1 {
@@ -121,20 +120,12 @@ func (r *AlarmRule) Parse() error {
 	}
 
 	r.alarmInterval = time.Duration(r.QueryRange/2) * time.Second
-	r.alarmQueryDelay = 10
+	r.alarmQueryDelay = AlarmQueryDelay
 	return nil
-}
-
-func (r *AlarmRule) Start() {
-	r.alarmTimer = schedule.Repeat(r.alarmInterval, r.Run)
 }
 
 func (r *AlarmRule) Stop() {
 	r.alarmTimer.Stop()
-}
-
-func (r *AlarmRule) Run() {
-
 }
 
 // used for threshold and compare rule
