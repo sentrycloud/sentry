@@ -52,7 +52,7 @@ func urlNotFound(w http.ResponseWriter, r *http.Request) {
 // sentry-sdk can be configured to send metrics directly to sentry-server
 func putMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	metrics, err := protocol.CollectHttpMetrics(w, r)
-	if err != nil {
+	if err == nil {
 		serverCollector.HandleMetrics(metrics)
 	}
 }

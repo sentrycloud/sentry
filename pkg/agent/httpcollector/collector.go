@@ -12,7 +12,7 @@ var agentReporter *reporter.Reporter
 
 func putMetricsHandler(w http.ResponseWriter, req *http.Request) {
 	metrics, err := protocol.CollectHttpMetrics(w, req)
-	if err != nil {
+	if err == nil {
 		agentReporter.Report(metrics)
 	}
 }
