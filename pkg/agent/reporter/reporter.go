@@ -4,7 +4,6 @@ import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"net"
-	"strings"
 	"time"
 )
 
@@ -62,17 +61,7 @@ func (r *Reporter) tryConnect() {
 
 func (r *Reporter) getLocalIP() {
 	localAddr := r.conn.LocalAddr().String() // ipv4 format: "192.0.2.1:25", ipv6 format: "[2001:db8::1]:80"
-	index := strings.LastIndex(localAddr, ":")
-	if index != -1 {
-		if localAddr[0] != '[' {
-			r.localIP = localAddr[0:index]
-		} else {
-			r.localIP = localAddr[1 : index-1]
-		}
-	} else {
-		newlog.Error("localAddress=%s is not valid", localAddr)
-	}
-
+	r.localIP = protocol.GetIPFromConnAddr(localAddr)
 	newlog.Info("LocalIP=%s", r.localIP)
 }
 
@@ -94,9 +83,9 @@ func (r *Reporter) processMetrics(metrics []protocol.MetricValue) {
 			continue
 		}
 
-		_, exist := metric.Tags["ip"]
+		_, exist := metric.Tags["sentryIP"]
 		if !exist {
-			metric.Tags["ip"] = r.localIP // if tags not contain ip, agent add local ip to tags
+			metric.Tags["sentryIP"] = r.localIP // if tags not contain sentryIP, agent add local ip to tags
 		}
 
 		if len(r.metricList) > MaxMetricSize {

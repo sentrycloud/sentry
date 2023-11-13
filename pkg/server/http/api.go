@@ -53,6 +53,7 @@ func urlNotFound(w http.ResponseWriter, r *http.Request) {
 func putMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	metrics, err := protocol.CollectHttpMetrics(w, r)
 	if err == nil {
-		serverCollector.HandleMetrics(metrics)
+		remoteIP := protocol.GetIPFromConnAddr(r.RemoteAddr)
+		serverCollector.HandleMetrics(metrics, remoteIP)
 	}
 }

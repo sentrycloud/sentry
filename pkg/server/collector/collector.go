@@ -67,6 +67,7 @@ func (c *Collector) handleConn(conn net.Conn) {
 
 	var headerBuf [protocol.PduHeadSize]byte
 	var payloadBuf = make([]byte, InitialPayloadLength)
+	clientIP := protocol.GetIPFromConnAddr(conn.RemoteAddr().String())
 
 	for {
 		_, err := io.ReadFull(conn, headerBuf[:])
@@ -98,13 +99,18 @@ func (c *Collector) handleConn(conn net.Conn) {
 			continue
 		}
 
-		c.HandleMetrics(metrics)
+		c.HandleMetrics(metrics, clientIP)
 	}
 }
 
-func (c *Collector) HandleMetrics(metrics []protocol.MetricValue) {
+func (c *Collector) HandleMetrics(metrics []protocol.MetricValue, clientIP string) {
 	var filterMetrics []protocol.MetricValue
 	for _, metric := range metrics {
+		_, exist := metric.Tags["sentryIP"]
+		if !exist {
+			metric.Tags["sentryIP"] = clientIP // if tags not contain sentryIP, add client ip to tags
+		}
+
 		if !metric.IsValid() {
 			newlog.Info("invalid metric=%s, tags=%s, value=%f", metric.Metric, metric.Tags, metric.Value)
 			continue
