@@ -20,6 +20,7 @@ type ServerConfig struct {
 	HttpPort     int              `json:"http_port"`
 	ProfilePort  int              `json:"profile_port"`
 	MaxConnCount int              `json:"max_conn_count"`
+	ScanTable    bool             `json:"scan_table"`
 	Log          newlog.LogConfig `json:"log"`
 	TaosServer   TaosConfig       `json:"taos_server"`
 	Merge        MergeConfig      `json:"merge"`
@@ -37,6 +38,7 @@ func (c *ServerConfig) setDefault() {
 	c.HttpPort = 51001
 	c.ProfilePort = 51002
 	c.MaxConnCount = 1000
+	c.ScanTable = false
 
 	c.Log.Path = "logs/sentryServer.log"
 	c.Log.Level = "info"

@@ -32,6 +32,10 @@ func main() {
 	var merger = merge.CreateMerge(serverConfig.Merge, connPool)
 	merger.Start()
 
+	if serverConfig.ScanTable {
+		go taos.StartScanTables(connPool)
+	}
+
 	// start the tcp collector server
 	var server = collector.Collector{}
 	server.Start(serverConfig, merger)
