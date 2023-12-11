@@ -1,4 +1,4 @@
-package http
+package web
 
 import (
 	"errors"
@@ -55,9 +55,14 @@ func writeQueryResp(w http.ResponseWriter, status int, resp *protocol.QueryResp)
 		status = http.StatusInternalServerError
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(status)
 	w.Write(data)
+}
+
+func WriteQueryResp(w http.ResponseWriter, status int, resp *protocol.QueryResp) {
+	writeQueryResp(w, status, resp)
 }
 
 func splitTags(tags map[string]string) (map[string]string, map[string]string, error) {

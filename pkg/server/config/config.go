@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"os"
 )
@@ -16,14 +17,15 @@ type TaosConfig struct {
 }
 
 type ServerConfig struct {
-	TcpPort      int              `json:"tcp_port"`
-	HttpPort     int              `json:"http_port"`
-	ProfilePort  int              `json:"profile_port"`
-	MaxConnCount int              `json:"max_conn_count"`
-	ScanTable    bool             `json:"scan_table"`
-	Log          newlog.LogConfig `json:"log"`
-	TaosServer   TaosConfig       `json:"taos_server"`
-	Merge        MergeConfig      `json:"merge"`
+	TcpPort      int                 `json:"tcp_port"`
+	HttpPort     int                 `json:"http_port"`
+	ProfilePort  int                 `json:"profile_port"`
+	MaxConnCount int                 `json:"max_conn_count"`
+	ScanTable    bool                `json:"scan_table"`
+	Log          newlog.LogConfig    `json:"log"`
+	TaosServer   TaosConfig          `json:"taos_server"`
+	MySQLServer  dbmodel.MySQLConfig `json:"mysql_server"`
+	Merge        MergeConfig         `json:"merge"`
 }
 
 type MergeConfig struct {

@@ -8,7 +8,7 @@ import (
 
 type Manager struct {
 	mysqlDB       *mysql.MySQL
-	alarmContacts map[string]mysql.Contact
+	alarmContacts []mysql.Contact
 	alarmRules    map[int]BaseRule
 }
 
@@ -32,10 +32,10 @@ func (m *Manager) Start() error {
 	}
 
 	m.alarmRules = make(map[int]BaseRule)
-	for id, rule := range rules {
+	for _, rule := range rules {
 		baseRule, e := m.makeBaseRule(rule)
 		if e == nil {
-			m.alarmRules[id] = baseRule
+			m.alarmRules[rule.Id] = baseRule
 			baseRule.Start()
 		}
 	}

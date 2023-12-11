@@ -10,12 +10,16 @@ import (
 )
 
 const (
+	// MetricUrl API for TSDB
 	MetricUrl   = "/server/api/metrics"
 	TagKeyUrl   = "/server/api/tagKeys"
 	TagValueUrl = "/server/api/tagValues"
 	CurveUrl    = "/server/api/curves"
 	RangeUrl    = "/server/api/range"
 	TopNUrl     = "/server/api/topn"
+
+	// ContactUrl API for MySQL
+	ContactUrl = "/server/api/contact"
 
 	PutMetricsUrl = "/server/api/putMetrics"
 )
@@ -113,4 +117,25 @@ func CollectHttpMetrics(w http.ResponseWriter, req *http.Request) ([]MetricValue
 
 	w.WriteHeader(http.StatusOK)
 	return values, nil
+}
+
+func WriteQueryResp(w http.ResponseWriter, status int, code int, msg string, data interface{}) {
+	var resp = &QueryResp{}
+	resp.Code = code
+	resp.Msg = msg
+	resp.Data = data
+	jsonData, err := Json.Marshal(resp)
+	if err != nil {
+		newlog.Error("marsh query response failed")
+		status = http.StatusInternalServerError
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(status)
+	w.Write(jsonData)
+}
+
+func MethodNotSupport(w http.ResponseWriter, r *http.Request) {
+	WriteQueryResp(w, http.StatusBadRequest, 1, "http method not support", nil)
 }

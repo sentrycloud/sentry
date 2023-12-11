@@ -1,12 +1,12 @@
 CREATE TABLE `alarm_contact` (
-    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
     `name` varchar(255) NOT NULL,
     `phone` varchar(255) DEFAULT NULL,
     `mail` varchar(255) DEFAULT NULL,
     `wechat` varchar(255) DEFAULT NULL,
-    `deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'has this contact be deleted',
-    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
-    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'update time',
     PRIMARY KEY (`id`),
     KEY `idx_name` (`name`),
     KEY `idx_created` (`created`)
