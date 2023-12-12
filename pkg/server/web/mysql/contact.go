@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"github.com/sentrycloud/sentry/pkg/dbmodel"
+	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"net/http"
 )
@@ -46,12 +47,14 @@ func modifyContact(w http.ResponseWriter, r *http.Request, modifyFunc func(conta
 	var contact dbmodel.AlarmContact
 	err := protocol.Json.NewDecoder(r.Body).Decode(&contact)
 	if err != nil {
+		newlog.Error("json decode failed: %v", err)
 		protocol.WriteQueryResp(w, http.StatusInternalServerError, 2, "json decoder failed", nil)
 		return
 	}
 
 	err = modifyFunc(&contact)
 	if err != nil {
+		newlog.Error("db modify failed: %v", err)
 		protocol.WriteQueryResp(w, http.StatusInternalServerError, 3, "db modify failed", nil)
 		return
 	}

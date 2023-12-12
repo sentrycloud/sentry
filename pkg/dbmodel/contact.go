@@ -2,7 +2,6 @@ package dbmodel
 
 import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
-	"time"
 )
 
 type AlarmContact struct {
@@ -29,10 +28,8 @@ func QueryAllContacts() ([]AlarmContact, error) {
 }
 
 func AddContact(contact *AlarmContact) error {
+	contact.SetTimeNow()
 	result := db.Select("name", "phone", "mail", "wechat").Create(contact)
-	now := time.Now()
-	contact.Created = now
-	contact.Updated = now
 	return result.Error
 }
 
@@ -42,6 +39,7 @@ func UpdateContact(contact *AlarmContact) error {
 }
 
 func DeleteContact(contact *AlarmContact) error {
+	// soft delete
 	result := db.Model(contact).Update("is_deleted", 1)
 	return result.Error
 }

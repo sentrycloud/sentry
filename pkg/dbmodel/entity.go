@@ -9,3 +9,9 @@ type Entity struct {
 	Updated   time.Time `json:"updated"`
 	IsDeleted int       `json:"is_deleted"`
 }
+
+func (p *Entity) SetTimeNow() {
+	now := time.Now()
+	p.Created = now
+	p.Updated = now
+}

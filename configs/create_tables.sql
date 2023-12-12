@@ -8,8 +8,8 @@ CREATE TABLE `alarm_contact` (
     `mail` varchar(255) DEFAULT NULL,
     `wechat` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`id`),
-    KEY `idx_name` (`name`),
-    KEY `idx_created` (`created`)
+    KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `alarm_rule` (
@@ -30,6 +30,19 @@ CREATE TABLE `alarm_rule` (
     KEY `idx_deleted` (`deleted`),
     KEY `idx_created` (`created`),
     KEY `idx_updated` (`updated`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `metric_white_list` (
+     `id` bigint(20) NOT NULL AUTO_INCREMENT,
+     `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+     `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+     `metric` varchar(255) NOT NULL,
+     `creator` varchar(255) DEFAULT NULL,
+     `app_name` varchar(255) DEFAULT NULL,
+     PRIMARY KEY (`id`),
+     KEY `idx_deleted` (`is_deleted`),
+     KEY `idx_metric` (`metric`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 INSERT INTO `alarm_contact` (`name`, `phone`, `mail`, `wechat`) VALUES ('eric', '13777820006', 'eric@gmail.com', 'eric@gmail.com');

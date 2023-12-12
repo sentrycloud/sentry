@@ -19,7 +19,8 @@ const (
 	TopNUrl     = "/server/api/topn"
 
 	// ContactUrl API for MySQL
-	ContactUrl = "/server/api/contact"
+	ContactUrl         = "/server/api/contact"
+	MetricWhiteListUrl = "/server/api/metricWhiteList"
 
 	PutMetricsUrl = "/server/api/putMetrics"
 )
