@@ -21,6 +21,8 @@ const (
 	// ContactUrl API for MySQL
 	ContactUrl         = "/server/api/contact"
 	MetricWhiteListUrl = "/server/api/metricWhiteList"
+	DashboardUrl       = "/server/api/dashboard"
+	ChartUrl           = "/server/api/chart"
 
 	PutMetricsUrl = "/server/api/putMetrics"
 )

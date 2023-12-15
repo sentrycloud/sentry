@@ -1,5 +1,5 @@
 CREATE TABLE `alarm_contact` (
-    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
@@ -13,7 +13,7 @@ CREATE TABLE `alarm_contact` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `alarm_rule` (
-    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `name` varchar(128) DEFAULT '',
     `type` int(6) NOT NULL,
     `query_range` int(11) NOT NULL DEFAULT '60',
@@ -33,16 +33,85 @@ CREATE TABLE `alarm_rule` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `metric_white_list` (
-     `id` bigint(20) NOT NULL AUTO_INCREMENT,
-     `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-     `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-     `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
-     `metric` varchar(255) NOT NULL,
-     `creator` varchar(255) DEFAULT NULL,
-     `app_name` varchar(255) DEFAULT NULL,
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `metric` varchar(255) NOT NULL,
+    `creator` varchar(255) NOT NULL DEFAULT '',
+    `app_name` varchar(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`id`),
+    KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_metric` (`metric`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `dashboard` (
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `name` varchar(128) NOT NULL DEFAULT '',
+    `creator` varchar(255) NOT NULL DEFAULT '',
+    `app_name` varchar(255) NOT NULL DEFAULT '',
+    `chart_layout` varchar(4096) NOT NULL DEFAULT '',
      PRIMARY KEY (`id`),
      KEY `idx_deleted` (`is_deleted`),
-     KEY `idx_metric` (`metric`)
+     KEY `idx_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `chart` (
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `name` varchar(128) NOT NULL DEFAULT '',
+    `type` tinyint(2) NOT NULL DEFAULT '0',
+    `aggregation` varchar(32) NOT NULL DEFAULT '',
+    `down_sample` varchar(32) NOT NULL DEFAULT '',
+    `topn_limit` int(11) NOT NULL DEFAULT '0',
+    PRIMARY KEY (`id`),
+    KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `line` (
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `name` varchar(128) NOT NULL DEFAULT '',
+    `metric` varchar(255) NOT NULL DEFAULT '',
+    `tags` varchar(1024) NOT NULL DEFAULT '',
+    PRIMARY KEY (`id`),
+    KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_name` (`name`),
+    KEY `idx_metric` (`metric`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `dashboard_chart_relation` (
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `dashboard_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
+    `chart_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
+    PRIMARY KEY (`id`),
+    KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_dashboard_id` (`dashboard_id`),
+    KEY `idx_chart_id` (`chart_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `chart_line_relation` (
+    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `dashboard_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
+    `chart_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
+    PRIMARY KEY (`id`),
+    KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_dashboard_id` (`dashboard_id`),
+    KEY `idx_chart_id` (`chart_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 INSERT INTO `alarm_contact` (`name`, `phone`, `mail`, `wechat`) VALUES ('eric', '13777820006', 'eric@gmail.com', 'eric@gmail.com');

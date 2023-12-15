@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func HandleContact(w http.ResponseWriter, r *http.Request) {
-	var entity dbmodel.AlarmContact
+func HandleDashboard(w http.ResponseWriter, r *http.Request) {
+	var entity dbmodel.Dashboard
 	switch r.Method {
 	case "GET":
-		var entities []dbmodel.AlarmContact
+		var entities []dbmodel.Dashboard
 		queryAllEntities(w, entities)
 	case "PUT":
 		modifyEntity(w, r, dbmodel.AddEntity, &entity)

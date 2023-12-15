@@ -70,6 +70,7 @@ func Start(serverConfig *config.ServerConfig, server *collector.Collector) {
 
 	mux.HandleFunc(protocol.ContactUrl, mysql.HandleContact)
 	mux.HandleFunc(protocol.MetricWhiteListUrl, mysql.HandleMetricWhiteList)
+	mux.HandleFunc(protocol.DashboardUrl, mysql.HandleDashboard)
 
 	connPool = taos.CreateConnPool(serverConfig.TaosServer)
 	serverCollector = server
