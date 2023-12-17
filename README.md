@@ -10,7 +10,7 @@ Sentry is a DevOps monitoring system that collect time series data, display data
 * sentry-alarm can set 4 type of alarm: threashold, heartbeat, compare and TopN 
 
 # Architecture
-![sentry architecture](./docs/architecture.png)
+<img src="./docs/architecture.png" width="600" height="600">
 
 # Roadmap
 - [ ] add more sentry-sdk for other language
