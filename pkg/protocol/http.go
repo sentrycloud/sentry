@@ -11,18 +11,20 @@ import (
 
 const (
 	// MetricUrl API for TSDB
-	MetricUrl   = "/server/api/metrics"
-	TagKeyUrl   = "/server/api/tagKeys"
-	TagValueUrl = "/server/api/tagValues"
-	CurveUrl    = "/server/api/curves"
-	RangeUrl    = "/server/api/range"
-	TopNUrl     = "/server/api/topn"
+	MetricUrl    = "/server/api/metrics"
+	TagKeyUrl    = "/server/api/tagKeys"
+	TagValueUrl  = "/server/api/tagValues"
+	CurveUrl     = "/server/api/curves"
+	RangeUrl     = "/server/api/range"
+	TopNUrl      = "/server/api/topn"
+	ChartDataUrl = "/server/api/chartData"
 
 	// ContactUrl API for MySQL
 	ContactUrl         = "/server/api/contact"
 	MetricWhiteListUrl = "/server/api/metricWhiteList"
 	DashboardUrl       = "/server/api/dashboard"
 	ChartUrl           = "/server/api/chart"
+	ChartListUrl       = "/server/api/chartList"
 
 	PutMetricsUrl = "/server/api/putMetrics"
 )

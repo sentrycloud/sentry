@@ -1,4 +1,4 @@
-package web
+package tsdb
 
 import (
 	"errors"

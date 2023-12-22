@@ -1,13 +1,12 @@
-package web
+package tsdb
 
 import (
-	"database/sql/driver"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"net/http"
 )
 
-func queryTopn(w http.ResponseWriter, r *http.Request) {
+func QueryTopn(w http.ResponseWriter, r *http.Request) {
 	var req protocol.TopNRequest
 	var resp = protocol.QueryResp{}
 	err := protocol.Json.NewDecoder(r.Body).Decode(&req)
@@ -28,45 +27,26 @@ func queryTopn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := connPool.GetConn()
-	if err != nil {
-		newlog.Error("queryTopn: get conn pool failed: %v", err)
-		resp.Code = CodeGetConnPoolError
-		resp.Msg = CodeMsg[CodeGetConnPoolError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
-		return
-	}
-
-	defer connPool.PutConn(conn)
-
 	sql := buildTopnQuerySql(&req)
-	rows, err := conn.Query(sql)
+	results, err := QueryTSDB(sql, 2)
 	if err != nil {
-		newlog.Error("queryTopn: query taos failed: %v", err)
 		resp.Code = CodeExecSqlError
 		resp.Msg = CodeMsg[CodeExecSqlError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
+		WriteQueryResp(w, http.StatusOK, &resp)
 		return
 	}
 
 	var topNDataList []protocol.TopNData
-	for {
-		values := make([]driver.Value, 2) // tag, value
-		if rows.Next(values) != nil {
-			break
-		}
-
+	for _, row := range results {
 		data := protocol.TopNData{
 			Metric: req.Metric,
 			Tags:   req.Tags,
-			Value:  values[1].(float64),
+			Value:  row[1].(float64),
 		}
-		data.Tags[req.Field] = values[0].(string)
+		data.Tags[req.Field] = row[0].(string)
 		topNDataList = append(topNDataList, data)
 	}
-
-	_ = rows.Close()
-
+	
 	resp.Code = CodeOK
 	resp.Msg = CodeMsg[CodeOK]
 	resp.Data = topNDataList

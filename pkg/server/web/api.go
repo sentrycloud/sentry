@@ -5,8 +5,8 @@ import (
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"github.com/sentrycloud/sentry/pkg/server/collector"
 	"github.com/sentrycloud/sentry/pkg/server/config"
-	"github.com/sentrycloud/sentry/pkg/server/taos"
 	"github.com/sentrycloud/sentry/pkg/server/web/mysql"
+	"github.com/sentrycloud/sentry/pkg/server/web/tsdb"
 	"log"
 	"net/http"
 	"os"
@@ -14,8 +14,6 @@ import (
 	"strconv"
 )
 
-// separate connection pool for query
-var connPool *taos.ConnPool
 var serverCollector *collector.Collector
 
 // SPAHandler implements the http.Handler interface, so we can use it
@@ -55,25 +53,29 @@ func (h SPAHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Start(serverConfig *config.ServerConfig, server *collector.Collector) {
+	tsdb.Init(serverConfig.TaosServer)
+	serverCollector = server
+
 	spaHandler := SPAHandler{staticPath: "../sentry-frontend/build", indexPath: "index.html"}
 
 	mux := http.NewServeMux()
 	mux.Handle("/", spaHandler)
 
 	mux.HandleFunc(protocol.PutMetricsUrl, putMetricsHandler)
-	mux.HandleFunc(protocol.MetricUrl, queryMetrics)
-	mux.HandleFunc(protocol.TagKeyUrl, queryTagKeys)
-	mux.HandleFunc(protocol.TagValueUrl, queryTagValues)
-	mux.HandleFunc(protocol.CurveUrl, queryCurves)
-	mux.HandleFunc(protocol.RangeUrl, queryTimeSeriesDataForRange)
-	mux.HandleFunc(protocol.TopNUrl, queryTopn)
+
+	mux.HandleFunc(protocol.MetricUrl, tsdb.QueryMetrics)
+	mux.HandleFunc(protocol.TagKeyUrl, tsdb.QueryTagKeys)
+	mux.HandleFunc(protocol.TagValueUrl, tsdb.QueryTagValues)
+	mux.HandleFunc(protocol.CurveUrl, tsdb.QueryCurves)
+	mux.HandleFunc(protocol.RangeUrl, tsdb.QueryTimeSeriesDataForRange)
+	mux.HandleFunc(protocol.TopNUrl, tsdb.QueryTopn)
+	mux.HandleFunc(protocol.ChartDataUrl, tsdb.QueryChartData)
 
 	mux.HandleFunc(protocol.ContactUrl, mysql.HandleContact)
 	mux.HandleFunc(protocol.MetricWhiteListUrl, mysql.HandleMetricWhiteList)
 	mux.HandleFunc(protocol.DashboardUrl, mysql.HandleDashboard)
-
-	connPool = taos.CreateConnPool(serverConfig.TaosServer)
-	serverCollector = server
+	mux.HandleFunc(protocol.ChartUrl, mysql.HandleChart)
+	mux.HandleFunc(protocol.ChartListUrl, mysql.HandleChartList)
 
 	newlog.Info("listen on http port: %d", serverConfig.HttpPort)
 	go func() {

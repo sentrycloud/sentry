@@ -64,14 +64,15 @@ CREATE TABLE `chart` (
     `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `dashboard_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
     `name` varchar(128) NOT NULL DEFAULT '',
-    `type` tinyint(2) NOT NULL DEFAULT '0',
+    `type` varchar(32) NOT NULL DEFAULT '',
     `aggregation` varchar(32) NOT NULL DEFAULT '',
     `down_sample` varchar(32) NOT NULL DEFAULT '',
     `topn_limit` int(11) NOT NULL DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `idx_deleted` (`is_deleted`),
-    KEY `idx_name` (`name`)
+    KEY `idx_deleted_dashboard_id` (`is_deleted`, `dashboard_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `line` (
@@ -79,29 +80,19 @@ CREATE TABLE `line` (
     `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `chart_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
     `name` varchar(128) NOT NULL DEFAULT '',
     `metric` varchar(255) NOT NULL DEFAULT '',
-    `tags` varchar(1024) NOT NULL DEFAULT '',
+    `tags` varchar(4096) NOT NULL DEFAULT '',
+    `offset` int NOT NULL DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_deleted_chart_id` (`is_deleted`,`chart_id`),
     KEY `idx_name` (`name`),
     KEY `idx_metric` (`metric`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `dashboard_chart_relation` (
-    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
-    `dashboard_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
-    `chart_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
-    PRIMARY KEY (`id`),
-    KEY `idx_deleted` (`is_deleted`),
-    KEY `idx_dashboard_id` (`dashboard_id`),
-    KEY `idx_chart_id` (`chart_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-
-CREATE TABLE `chart_line_relation` (
     `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

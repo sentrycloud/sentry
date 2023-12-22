@@ -70,3 +70,9 @@ func DeleteEntity(entity interface{}) error {
 	result := db.Model(entity).Update("is_deleted", 1)
 	return result.Error
 }
+
+// GetEntity query entity by id
+func GetEntity(entity interface{}) error {
+	result := db.Where("is_deleted=0").Find(entity)
+	return result.Error
+}

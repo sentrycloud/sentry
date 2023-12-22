@@ -1,14 +1,12 @@
-package web
+package tsdb
 
 import (
-	"database/sql/driver"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
-	"io"
 	"net/http"
 )
 
-func queryCurves(w http.ResponseWriter, r *http.Request) {
+func QueryCurves(w http.ResponseWriter, r *http.Request) {
 	var req protocol.MetricReq
 	var resp = protocol.QueryResp{}
 	err := protocol.Json.NewDecoder(r.Body).Decode(&req)
@@ -42,37 +40,18 @@ func queryCurves(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sql, starKeys := buildCurvesRequest(req.Metric, noStarTags, starTags)
-
-	conn, err := connPool.GetConn()
+	results, err := QueryTSDB(sql, len(starKeys))
 	if err != nil {
-		newlog.Error("queryCurves: get conn pool failed: %v", err)
-		resp.Code = CodeGetConnPoolError
-		resp.Msg = CodeMsg[CodeGetConnPoolError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
-		return
-	}
-
-	defer connPool.PutConn(conn)
-
-	rows, err := conn.Query(sql)
-	if err != nil {
-		newlog.Error("queryCurves: query taos failed: %v", err)
 		resp.Code = CodeExecSqlError
 		resp.Msg = CodeMsg[CodeExecSqlError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
+		WriteQueryResp(w, http.StatusOK, &resp)
 		return
 	}
 
-	defer rows.Close()
-	for {
-		values := make([]driver.Value, len(starKeys))
-		if rows.Next(values) == io.EOF {
-			break
-		}
-
+	for _, row := range results {
 		tags := make(map[string]string)
 		for idx, key := range starKeys {
-			tags[key] = values[idx].(string)
+			tags[key] = row[idx].(string)
 		}
 
 		for k, v := range noStarTags {
