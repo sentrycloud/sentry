@@ -36,14 +36,21 @@ func QueryTSDB(sql string, totalColumn int) ([][]driver.Value, error) {
 
 	defer rows.Close()
 
+	err = nil
 	var result [][]driver.Value
 	for {
 		values := make([]driver.Value, totalColumn)
-		if rows.Next(values) == io.EOF {
+		err = rows.Next(values)
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			} else {
+				newlog.Error("call rows.Next failed: %v", err)
+			}
 			break
 		}
 
 		result = append(result, values)
 	}
-	return result, nil
+	return result, err
 }

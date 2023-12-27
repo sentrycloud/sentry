@@ -60,3 +60,18 @@ func QueryChatLines(chartId uint32) ([]Line, error) {
 	result := db.Where("is_deleted=? AND chart_id=?", 0, chartId).Find(&lines)
 	return lines, result.Error
 }
+
+func DeleteChartAndLines(chartId uint32) error {
+	// soft delete
+	result := db.Table("chart").Where("id=", chartId).Update("is_deleted", 1)
+	if result.Error != nil {
+		return result.Error
+	}
+	result = db.Table("line").Where("chart_id=", chartId).Update("is_deleted", 1)
+	return result.Error
+}
+
+func DeleteLines(lineIds []uint32) error {
+	result := db.Table("line").Where("id in ?", lineIds).Update("is_deleted", 1)
+	return result.Error
+}
