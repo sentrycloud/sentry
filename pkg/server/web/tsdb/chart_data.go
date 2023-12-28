@@ -5,13 +5,12 @@ import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"net/http"
-	"time"
 )
 
 type ChartDataReq struct {
-	Start   int64  `json:"start"`
-	End     int64  `json:"end"`
-	ChartId uint32 `json:"chart_id"`
+	dbmodel.Chart
+	Start int64 `json:"start"`
+	End   int64 `json:"end"`
 }
 
 type ChartData struct {
@@ -29,26 +28,39 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lines, err := dbmodel.QueryChatLines(chartDataReq.ChartId)
-	if err != nil {
-		errMsg := "query mysql failed: " + err.Error()
+	downSample, err := protocol.TransferDownSample(chartDataReq.DownSample)
+	if err != nil || downSample == 0 {
+		errMsg := "parse downSample failed: " + err.Error()
 		newlog.Error(errMsg)
 		protocol.WriteQueryResp(w, http.StatusOK, 2, errMsg, nil)
 		return
 	}
 
+	lines, err := dbmodel.QueryChatLines(chartDataReq.ID)
+	if err != nil {
+		errMsg := "query mysql failed: " + err.Error()
+		newlog.Error(errMsg)
+		protocol.WriteQueryResp(w, http.StatusOK, 3, errMsg, nil)
+		return
+	}
+
+	chartDataReq.Start *= 1000 // transfer to milliseconds
+	chartDataReq.End *= 1000
 	var curveDataList []ChartData
 	for _, line := range lines {
 		var tags = map[string]string{}
-		protocol.Json.UnmarshalFromString(line.Tags, &tags)
+		err = protocol.Json.UnmarshalFromString(line.Tags, &tags)
+		if err != nil {
+			newlog.Error("unmarshal tags failed for charId=%d, lineId=%d, tags=%s", chartDataReq.ID, line.ID, line.Tags)
+			continue
+		}
+
 		m := protocol.MetricReq{
 			Metric: line.Metric,
 			Tags:   tags,
 		}
 
-		now := time.Now().UnixMilli()
-		start := now - 1800*1000
-		sql := buildRangeQuerySql(start, now, "avg", 10, &m)
+		sql := buildRangeQuerySql(chartDataReq.Start, chartDataReq.End, chartDataReq.Aggregation, downSample, &m)
 		results, e := QueryTSDB(sql, 2)
 		if e != nil {
 			continue
@@ -79,5 +91,4 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 	resp.Msg = CodeMsg[CodeOK]
 	resp.Data = curveDataList
 	writeQueryResp(w, http.StatusOK, &resp)
-
 }

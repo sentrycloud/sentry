@@ -39,16 +39,6 @@ func (Line) TableName() string {
 	return "line"
 }
 
-type DashboardChartRelation struct {
-	Entity
-	DashboardId uint32 `json:"dashboard_id"`
-	ChartId     uint32 `json:"chart_id"`
-}
-
-func (DashboardChartRelation) TableName() string {
-	return "dashboard_chart_relation"
-}
-
 func QueryDashboardCharts(dashboardId uint32) ([]Chart, error) {
 	var charts []Chart
 	result := db.Where("is_deleted=? AND dashboard_id=?", 0, dashboardId).Find(&charts)

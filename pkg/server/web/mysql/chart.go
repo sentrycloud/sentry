@@ -255,6 +255,11 @@ func validateChartParam(chart *ChartParams) error {
 		return errors.New("chart aggregation not in sum/avg/max/min")
 	}
 
+	downSample, err := protocol.TransferDownSample(chart.DownSample)
+	if err != nil || downSample == 0 {
+		return errors.New("wrong down sample format")
+	}
+
 	if len(chart.Lines) == 0 {
 		return errors.New("no line in chart")
 	}
