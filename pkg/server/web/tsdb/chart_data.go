@@ -60,7 +60,8 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 			Tags:   tags,
 		}
 
-		sql := buildRangeQuerySql(chartDataReq.Start, chartDataReq.End, chartDataReq.Aggregation, downSample, &m)
+		offset := int64(line.Offset * 3600 * 24 * 1000)
+		sql := buildRangeQuerySql(chartDataReq.Start+offset, chartDataReq.End+offset, chartDataReq.Aggregation, downSample, &m)
 		results, e := QueryTSDB(sql, 2)
 		if e != nil {
 			continue
@@ -69,7 +70,7 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 		var dataPoints []protocol.TimeValuePoint
 		for _, row := range results {
 			point := protocol.TimeValuePoint{
-				TimeStamp: row[0].(int64) / 1000,
+				TimeStamp: (row[0].(int64) - offset) / 1000,
 				Value:     row[1].(float64),
 			}
 

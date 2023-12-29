@@ -6,6 +6,7 @@ import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"net/http"
+	"strconv"
 )
 
 type ChartParams struct {
@@ -56,15 +57,16 @@ func HandleChartList(w http.ResponseWriter, r *http.Request) {
 }
 
 func getChart(w http.ResponseWriter, r *http.Request) {
-	var chart dbmodel.Chart
-	err := protocol.Json.NewDecoder(r.Body).Decode(&chart)
+	chartId, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
-		errMsg := "json decode failed: " + err.Error()
+		errMsg := "get chartId failed: " + err.Error()
 		newlog.Error(errMsg)
 		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
 		return
 	}
 
+	var chart dbmodel.Chart
+	chart.ID = uint32(chartId)
 	err = dbmodel.GetEntity(&chart)
 	if err != nil {
 		errMsg := "query chart entity failed: " + err.Error()
@@ -209,12 +211,14 @@ func modifyChart(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = dbmodel.DeleteLines(deleteLineIds)
-	if err != nil {
-		errMsg := "delete chart line failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 7, errMsg, nil)
-		return
+	if len(deleteLineIds) > 0 {
+		err = dbmodel.DeleteLines(deleteLineIds)
+		if err != nil {
+			errMsg := "delete chart line failed: " + err.Error()
+			newlog.Error(errMsg)
+			protocol.WriteQueryResp(w, http.StatusOK, 7, errMsg, nil)
+			return
+		}
 	}
 
 	protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", nil)
