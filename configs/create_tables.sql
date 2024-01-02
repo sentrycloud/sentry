@@ -14,6 +14,9 @@ CREATE TABLE `alarm_contact` (
 
 CREATE TABLE `alarm_rule` (
     `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
     `name` varchar(128) DEFAULT '',
     `type` int(6) NOT NULL,
     `query_range` int(11) NOT NULL DEFAULT '60',
@@ -22,14 +25,10 @@ CREATE TABLE `alarm_rule` (
     `message` varchar(512) DEFAULT '' COMMENT 'alarm message format',
     `data_source` text NOT NULL,
     `trigger` text NOT NULL,
-    `deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'has this rule be deleted',
-    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
-    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'update time',
     PRIMARY KEY (`id`),
     KEY `idx_name` (`name`),
-    KEY `idx_deleted` (`deleted`),
-    KEY `idx_created` (`created`),
-    KEY `idx_updated` (`updated`)
+    KEY `idx_deleted` (`is_deleted`),
+    KEY `idx_deleted_updated` (`is_deleted`, `updated`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `metric_white_list` (
@@ -90,19 +89,6 @@ CREATE TABLE `line` (
     KEY `idx_deleted_chart_id` (`is_deleted`,`chart_id`),
     KEY `idx_name` (`name`),
     KEY `idx_metric` (`metric`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-
-CREATE TABLE `dashboard_chart_relation` (
-    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `is_deleted` tinyint(4) unsigned NOT NULL DEFAULT '0',
-    `dashboard_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
-    `chart_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
-    PRIMARY KEY (`id`),
-    KEY `idx_deleted` (`is_deleted`),
-    KEY `idx_dashboard_id` (`dashboard_id`),
-    KEY `idx_chart_id` (`chart_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 INSERT INTO `alarm_contact` (`name`, `phone`, `mail`, `wechat`) VALUES ('eric', '13777820006', 'eric@gmail.com', 'eric@gmail.com');

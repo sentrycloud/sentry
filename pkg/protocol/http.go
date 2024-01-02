@@ -19,7 +19,8 @@ const (
 	TopNUrl      = "/server/api/topn"
 	ChartDataUrl = "/server/api/chartData"
 
-	// ContactUrl API for MySQL
+	// AlarmRuleUrl API for MySQL
+	AlarmRuleUrl       = "/server/api/alarmRule"
 	ContactUrl         = "/server/api/contact"
 	MetricWhiteListUrl = "/server/api/metricWhiteList"
 	DashboardUrl       = "/server/api/dashboard"

@@ -71,6 +71,7 @@ func Start(serverConfig *config.ServerConfig, server *collector.Collector) {
 	mux.HandleFunc(protocol.TopNUrl, tsdb.QueryTopn)
 	mux.HandleFunc(protocol.ChartDataUrl, tsdb.QueryChartData)
 
+	mux.HandleFunc(protocol.AlarmRuleUrl, mysql.HandleAlarmRule)
 	mux.HandleFunc(protocol.ContactUrl, mysql.HandleContact)
 	mux.HandleFunc(protocol.MetricWhiteListUrl, mysql.HandleMetricWhiteList)
 	mux.HandleFunc(protocol.DashboardUrl, mysql.HandleDashboard)
