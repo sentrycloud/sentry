@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"os"
 	"strings"
@@ -11,20 +12,12 @@ import (
 const HttpProtocol = "http://"
 
 type AlarmConfig struct {
-	HttpPort      int              `json:"http_port"`
-	ProfilePort   int              `json:"profile_port"`
-	ServerAddress string           `json:"server_address"`
-	Log           newlog.LogConfig `json:"log"`
-	Db            MySQLConfig      `json:"db"`
-	Mail          MailConfig       `json:"mail"`
-}
-
-type MySQLConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	DBName   string `json:"db_name"`
+	HttpPort      int                 `json:"http_port"`
+	ProfilePort   int                 `json:"profile_port"`
+	ServerAddress string              `json:"server_address"`
+	Log           newlog.LogConfig    `json:"log"`
+	MySQLServer   dbmodel.MySQLConfig `json:"mysql_server"`
+	Mail          MailConfig          `json:"mail"`
 }
 
 type MailConfig struct {

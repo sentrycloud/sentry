@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/sentrycloud/sentry/pkg/alarm/config"
-	"github.com/sentrycloud/sentry/pkg/alarm/mysql"
 	"github.com/sentrycloud/sentry/pkg/alarm/query"
 	"github.com/sentrycloud/sentry/pkg/alarm/rule"
 	"github.com/sentrycloud/sentry/pkg/alarm/schedule"
 	"github.com/sentrycloud/sentry/pkg/alarm/sender"
 	"github.com/sentrycloud/sentry/pkg/cmdflags"
+	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/profile"
 	"time"
@@ -34,12 +34,12 @@ func main() {
 	schedule.Start()
 	defer schedule.Stop()
 
-	db, err := mysql.NewMySQL(&alarmConfig.Db)
+	err := dbmodel.NewMySQL(&alarmConfig.MySQLServer)
 	if err != nil {
 		return
 	}
 
-	ruleManager := rule.NewManager(db)
+	ruleManager := rule.NewManager()
 	ruleManager.Start()
 
 	newlog.Info("sentry alarm server start complete in %d ms", time.Now().UnixMilli()-startTime)

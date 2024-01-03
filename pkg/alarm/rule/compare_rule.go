@@ -30,12 +30,12 @@ func (r *CompareRule) Parse() error {
 	}
 
 	if r.alarmDataSource.CompareType != CompareTypeDifference && r.alarmDataSource.CompareType != CompareTypeRatio {
-		newlog.Error("compare type is invalid for ruleId=%d", r.Id)
+		newlog.Error("compare type is invalid for ruleId=%d", r.ID)
 		return errors.New("compare type is invalid")
 	}
 
 	if r.alarmDataSource.CompareDaysAgo > MaxCompareDays {
-		newlog.Error("compare day ago is too large for ruleId=%d", r.Id)
+		newlog.Error("compare day ago is too large for ruleId=%d", r.ID)
 		return errors.New("compare day ago is too large")
 	}
 
@@ -58,7 +58,7 @@ func (r *CompareRule) Run() {
 	}
 
 	if r.curves == nil {
-		newlog.Error("curves is still empty for ruleId=%d", r.Id)
+		newlog.Error("curves is still empty for ruleId=%d", r.ID)
 		return
 	}
 
@@ -67,14 +67,14 @@ func (r *CompareRule) Run() {
 		Token:      "",
 		Start:      startTime,
 		End:        endTime,
-		Aggregator: r.alarmDataSource.Aggregator,
+		Aggregator: r.alarmDataSource.Aggregation,
 		DownSample: r.alarmDataSource.DownSample,
 		Metrics:    r.curves,
 	}
 
 	curveDataList, err := query.Range(rangeReq)
 	if err != nil {
-		newlog.Error("query range data failed for ruleId=%d", r.Id)
+		newlog.Error("query range data failed for ruleId=%d", r.ID)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (r *CompareRule) Run() {
 	rangeReq.End = rangeReq.Start + int64(r.alarmDataSource.CompareSeconds)
 	curveHistoryDataList, err := query.Range(rangeReq)
 	if err != nil {
-		newlog.Error("query history range data failed for ruleId=%d", r.Id)
+		newlog.Error("query history range data failed for ruleId=%d", r.ID)
 		return
 	}
 

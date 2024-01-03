@@ -42,7 +42,7 @@ func (r *ThresholdRule) Run() {
 	}
 
 	if r.curves == nil {
-		newlog.Error("curves is still empty for ruleId=%d", r.Id)
+		newlog.Error("curves is still empty for ruleId=%d", r.ID)
 		return
 	}
 
@@ -51,14 +51,14 @@ func (r *ThresholdRule) Run() {
 		Token:      "",
 		Start:      startTime,
 		End:        endTime,
-		Aggregator: r.alarmDataSource.Aggregator,
+		Aggregator: r.alarmDataSource.Aggregation,
 		DownSample: r.alarmDataSource.DownSample,
 		Metrics:    r.curves,
 	}
 
 	curveDataList, err := query.Range(rangeReq)
 	if err != nil {
-		newlog.Error("query range data failed for ruleId=%d", r.Id)
+		newlog.Error("query range data failed for ruleId=%d", r.ID)
 		return
 	}
 

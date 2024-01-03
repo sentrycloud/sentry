@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/RussellLuo/timingwheel"
-	"github.com/sentrycloud/sentry/pkg/alarm/mysql"
 	"github.com/sentrycloud/sentry/pkg/alarm/query"
+	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"math"
@@ -42,7 +42,7 @@ type AlarmDataSource struct {
 	Metric         string            `json:"metric"`
 	Tags           map[string]string `json:"tags"`
 	DownSample     int64             `json:"down_sample"`
-	Aggregator     string            `json:"aggregator"`
+	Aggregation    string            `json:"aggregation"`
 	Sort           string            `json:"sort"`             // use for topN rule only
 	Limit          int               `json:"limit"`            // use for topN rule only
 	CompareType    int               `json:"compare_type"`     // use for compare rule only
@@ -57,7 +57,7 @@ type AlarmTrigger struct {
 }
 
 type AlarmRule struct {
-	mysql.Rule
+	dbmodel.AlarmRule
 
 	alarmDataSource AlarmDataSource
 	alarmTrigger    AlarmTrigger
@@ -68,18 +68,18 @@ type AlarmRule struct {
 
 func (r *AlarmRule) Parse() error {
 	if len(r.DataSource) == 0 {
-		newlog.Error("empty DataSource for ruleId=%d", r.Id)
+		newlog.Error("empty DataSource for ruleId=%d", r.ID)
 		return errors.New("empty DataSource")
 	}
 
 	if len(r.Trigger) == 0 {
-		newlog.Error("empty Trigger for ruleId=%d", r.Id)
+		newlog.Error("empty Trigger for ruleId=%d", r.ID)
 		return errors.New("empty Trigger")
 	}
 
 	err := json.Unmarshal([]byte(r.DataSource), &r.alarmDataSource)
 	if err != nil {
-		newlog.Error("unmarshal DataSource for ruleId=%d, failed: %v", r.Id, err)
+		newlog.Error("unmarshal DataSource for ruleId=%d, failed: %v", r.ID, err)
 		return err
 	}
 
@@ -87,35 +87,35 @@ func (r *AlarmRule) Parse() error {
 	r.alarmTrigger.GreaterThan = math.MaxFloat64
 	err = json.Unmarshal([]byte(r.Trigger), &r.alarmTrigger)
 	if err != nil {
-		newlog.Error("unmarshal Trigger for ruleId=%d failed: %v", r.Id, err)
+		newlog.Error("unmarshal Trigger for ruleId=%d failed: %v", r.ID, err)
 		return err
 	}
 
 	if len(r.alarmDataSource.Metric) == 0 {
-		newlog.Error("empty metric for ruleId=%d", r.Id)
+		newlog.Error("empty metric for ruleId=%d", r.ID)
 		return errors.New("empty metric")
 	}
 
 	for k, v := range r.alarmDataSource.Tags {
 		if len(k) == 0 || len(v) == 0 {
-			newlog.Error("empty key or value in tags for ruleId=%d", r.Id)
+			newlog.Error("empty key or value in tags for ruleId=%d", r.ID)
 			return errors.New("empty key or value in tags")
 		}
 
 		if strings.Contains(k, "*") {
-			newlog.Error("tag key has * for ruleId=%d", r.Id)
+			newlog.Error("tag key has * for ruleId=%d", r.ID)
 			return errors.New("tag key has *")
 		}
 	}
 
-	r.alarmDataSource.Aggregator, err = protocol.CheckAggregator(r.alarmDataSource.Aggregator)
+	r.alarmDataSource.Aggregation, err = protocol.CheckAggregator(r.alarmDataSource.Aggregation)
 	if err != nil {
-		newlog.Error("no such aggregator=%s for ruleId=%d", r.alarmDataSource.Aggregator, r.Id)
+		newlog.Error("no such aggregator=%s for ruleId=%d", r.alarmDataSource.Aggregation, r.ID)
 		return err
 	}
 
 	if r.alarmDataSource.DownSample < 1 {
-		newlog.Error("down sample is 0 for ruleId=%d", r.Id)
+		newlog.Error("down sample is 0 for ruleId=%d", r.ID)
 		return errors.New("down sample is 0")
 	}
 
@@ -145,7 +145,7 @@ func (r *AlarmRule) parseTags() (bool, []protocol.MetricReq, error) {
 				splitKey = k
 				splitValues = strings.Split(v, "||")
 			} else {
-				newlog.Error("has too much split tags in ruleId=%d", r.Id)
+				newlog.Error("has too much split tags in ruleId=%d", r.ID)
 				return false, nil, errors.New("too much split tags")
 			}
 		}

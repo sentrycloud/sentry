@@ -24,12 +24,12 @@ func (r *TopNRule) Parse() error {
 
 	r.alarmDataSource.Sort, err = protocol.CheckOrder(r.alarmDataSource.Sort)
 	if err != nil {
-		newlog.Error("wrong order for ruleId=%d, err: %v", r.Id, err)
+		newlog.Error("wrong order for ruleId=%d, err: %v", r.ID, err)
 		return err
 	}
 
 	if r.alarmDataSource.Limit <= 0 || r.alarmDataSource.Limit > MaxTopNLimit {
-		newlog.Warn("set topN limit to default value for ruleId=%d", r.Id)
+		newlog.Warn("set topN limit to default value for ruleId=%d", r.ID)
 		r.alarmDataSource.Limit = MaxTopNLimit
 	}
 
@@ -41,7 +41,7 @@ func (r *TopNRule) Parse() error {
 	}
 
 	if starCount != 1 {
-		newlog.Error("TopN alarm rule must has one and only one * tag for ruleId=%d", r.Id)
+		newlog.Error("TopN alarm rule must has one and only one * tag for ruleId=%d", r.ID)
 		return errors.New("TopN alarm rule must has one and only one * tag")
 	}
 
@@ -61,7 +61,7 @@ func (r *TopNRule) Run() {
 		End:        endTime,
 		Metric:     r.alarmDataSource.Metric,
 		Tags:       r.alarmDataSource.Tags,
-		Aggregator: r.alarmDataSource.Aggregator,
+		Aggregator: r.alarmDataSource.Aggregation,
 		DownSample: r.alarmDataSource.DownSample,
 		Order:      r.alarmDataSource.Sort,
 		Limit:      r.alarmDataSource.Limit,
@@ -69,7 +69,7 @@ func (r *TopNRule) Run() {
 
 	topNList, err := query.TopN(request)
 	if err != nil {
-		newlog.Error("query topN data failed for ruleId=%d", r.Id)
+		newlog.Error("query topN data failed for ruleId=%d", r.ID)
 		return
 	}
 

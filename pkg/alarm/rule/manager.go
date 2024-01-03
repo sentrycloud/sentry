@@ -2,40 +2,38 @@ package rule
 
 import (
 	"errors"
-	"github.com/sentrycloud/sentry/pkg/alarm/mysql"
+	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 )
 
 type Manager struct {
-	mysqlDB       *mysql.MySQL
-	alarmContacts []mysql.Contact
-	alarmRules    map[int]BaseRule
+	alarmContacts []dbmodel.AlarmContact
+	alarmRules    map[uint32]BaseRule
 }
 
-func NewManager(db *mysql.MySQL) *Manager {
+func NewManager() *Manager {
 	manager := new(Manager)
-
-	manager.mysqlDB = db
 	return manager
 }
 
 func (m *Manager) Start() error {
 	var err error
-	m.alarmContacts, err = m.mysqlDB.QueryContacts()
+	err = dbmodel.QueryAllEntity(&m.alarmContacts)
 	if err != nil {
 		return err
 	}
 
-	rules, err := m.mysqlDB.QueryAlarmRules()
+	var rules []dbmodel.AlarmRule
+	err = dbmodel.QueryAllEntity(&rules)
 	if err != nil {
 		return err
 	}
 
-	m.alarmRules = make(map[int]BaseRule)
+	m.alarmRules = make(map[uint32]BaseRule)
 	for _, rule := range rules {
 		baseRule, e := m.makeBaseRule(rule)
 		if e == nil {
-			m.alarmRules[rule.Id] = baseRule
+			m.alarmRules[rule.ID] = baseRule
 			baseRule.Start()
 		}
 	}
@@ -44,10 +42,10 @@ func (m *Manager) Start() error {
 	return nil
 }
 
-func (m *Manager) makeBaseRule(rule mysql.Rule) (BaseRule, error) {
-	alarmRule := AlarmRule{Rule: rule}
+func (m *Manager) makeBaseRule(rule dbmodel.AlarmRule) (BaseRule, error) {
+	alarmRule := AlarmRule{AlarmRule: rule}
 	var baseRule BaseRule
-	switch alarmRule.RuleType {
+	switch alarmRule.Type {
 	case AlarmTypeHeartBeat:
 		baseRule = &HeartBeatRule{
 			AlarmRule: alarmRule,
@@ -65,7 +63,7 @@ func (m *Manager) makeBaseRule(rule mysql.Rule) (BaseRule, error) {
 			AlarmRule: alarmRule,
 		}
 	default:
-		newlog.Error("no such rule type: %d", alarmRule.RuleType)
+		newlog.Error("no such rule type: %d", alarmRule.Type)
 		return nil, errors.New("no such rule type")
 	}
 

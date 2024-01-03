@@ -46,7 +46,7 @@ func getJsonTags(entity interface{}) []string {
 func QueryAllEntity(entities interface{}) error {
 	result := db.Where("is_deleted = ?", 0).Find(entities)
 	if result.Error != nil {
-		newlog.Error("query alarm contacts failed: %v", result.Error)
+		newlog.Error("query all entities failed: %v", result.Error)
 		return result.Error
 	}
 

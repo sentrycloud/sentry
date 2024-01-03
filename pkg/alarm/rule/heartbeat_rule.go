@@ -24,7 +24,7 @@ func (r *HeartBeatRule) Parse() error {
 
 	for _, v := range r.alarmDataSource.Tags {
 		if strings.Contains(v, "*") {
-			newlog.Error("heartbeat alarm rule has * tag for ruleId=%d", r.Id)
+			newlog.Error("heartbeat alarm rule has * tag for ruleId=%d", r.ID)
 			return errors.New("heartbeat alarm rule has * tag")
 		}
 	}
@@ -36,7 +36,7 @@ func (r *HeartBeatRule) Parse() error {
 
 	r.rangeRequest = &protocol.TimeSeriesDataRequest{
 		Token:      "",
-		Aggregator: r.alarmDataSource.Aggregator,
+		Aggregator: r.alarmDataSource.Aggregation,
 		DownSample: r.alarmDataSource.DownSample,
 	}
 
@@ -53,7 +53,7 @@ func (r *HeartBeatRule) Run() {
 
 	curveDataList, err := query.Range(r.rangeRequest)
 	if err != nil {
-		newlog.Error("query range data failed for heartbeat ruleId=%d", r.Id)
+		newlog.Error("query range data failed for heartbeat ruleId=%d", r.ID)
 		return
 	}
 
