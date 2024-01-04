@@ -70,7 +70,7 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 		var dataPoints []protocol.TimeValuePoint
 		for _, row := range results {
 			point := protocol.TimeValuePoint{
-				TimeStamp: (row[0].(int64) - offset) / 1000,
+				TimeStamp: (row[0].(int64) - offset) / 1000, // add back offset, so data can be displayed on the same axis
 				Value:     row[1].(float64),
 			}
 

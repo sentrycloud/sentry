@@ -28,7 +28,7 @@ CREATE TABLE `alarm_rule` (
     PRIMARY KEY (`id`),
     KEY `idx_name` (`name`),
     KEY `idx_deleted` (`is_deleted`),
-    KEY `idx_deleted_updated` (`is_deleted`, `updated`)
+    KEY `idx_updated` (`updated`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `metric_white_list` (
