@@ -6,6 +6,33 @@ import (
 	"net/http"
 )
 
+func internalQueryRange(start int64, end int64, offset int64, aggregator string, downSample int64,
+	metricReq *protocol.MetricReq) (*protocol.CurveData, int) {
+	sql := buildRangeQuerySql(start+offset, end+offset, aggregator, downSample, metricReq)
+	results, e := QueryTSDB(sql, 2)
+	if e != nil {
+		return nil, protocol.CodeExecTSDBSqlError
+	}
+
+	var dataPoints []protocol.TimeValuePoint
+	for _, row := range results {
+		point := protocol.TimeValuePoint{
+			TimeStamp: (row[0].(int64) - offset) / 1000, // add back offset, so multiple line can be displayed on the same axis
+			Value:     row[1].(float64),
+		}
+
+		dataPoints = append(dataPoints, point)
+	}
+
+	curveData := protocol.CurveData{
+		Metric: metricReq.Metric,
+		Tags:   metricReq.Tags,
+		DPS:    dataPoints,
+	}
+
+	return &curveData, protocol.CodeOK
+}
+
 func QueryTimeSeriesDataForRange(w http.ResponseWriter, r *http.Request) {
 	var req protocol.TimeSeriesDataRequest
 	err := protocol.DecodeRequest(r, &req)
@@ -22,29 +49,12 @@ func QueryTimeSeriesDataForRange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var curveDataList []protocol.CurveData
+	var curveDataList []*protocol.CurveData
 	for _, m := range req.Metrics {
-		sql := buildRangeQuerySql(req.Start, req.End, req.Aggregator, req.DownSample, &m)
-		results, e := QueryTSDB(sql, 2)
-		if e != nil {
-			protocol.WriteQueryResp(w, protocol.CodeExecTSDBSqlError, nil)
+		curveData, retCode := internalQueryRange(req.Start, req.End, 0, req.Aggregator, req.DownSample, &m)
+		if retCode != protocol.CodeOK {
+			protocol.WriteQueryResp(w, retCode, nil)
 			return
-		}
-
-		var dataPoints []protocol.TimeValuePoint
-		for _, row := range results {
-			point := protocol.TimeValuePoint{
-				TimeStamp: row[0].(int64) / 1000,
-				Value:     row[1].(float64),
-			}
-
-			dataPoints = append(dataPoints, point)
-		}
-
-		curveData := protocol.CurveData{
-			Metric: m.Metric,
-			Tags:   m.Tags,
-			DPS:    dataPoints,
 		}
 		curveDataList = append(curveDataList, curveData)
 	}

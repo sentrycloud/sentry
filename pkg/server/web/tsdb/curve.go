@@ -6,35 +6,23 @@ import (
 	"net/http"
 )
 
-func QueryCurves(w http.ResponseWriter, r *http.Request) {
-	var req protocol.MetricReq
-	err := protocol.DecodeRequest(r, &req)
-	if err != nil {
-		newlog.Error("queryCurves: decode query request failed: %v", err)
-		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
-		return
-	}
-
+func internalQueryCurves(req *protocol.MetricReq) ([]map[string]string, int) {
 	starTags, noStarTags, err := splitTags(req.Tags)
 	if err != nil {
 		newlog.Error("queryCurves: splitTags failed: %v", err)
-		protocol.WriteQueryResp(w, protocol.CodeSplitTagsError, nil)
-		return
+		return nil, protocol.CodeSplitTagsError
 	}
 
 	var curveList []map[string]string
 	if len(starTags) == 0 {
-		newlog.Info("queryCurves: no star tags ")
 		curveList = append(curveList, noStarTags)
-		protocol.WriteQueryResp(w, protocol.CodeOK, curveList)
-		return
+		return curveList, protocol.CodeOK
 	}
 
 	sql, starKeys := buildCurvesRequest(req.Metric, noStarTags, starTags)
 	results, err := QueryTSDB(sql, len(starKeys))
 	if err != nil {
-		protocol.WriteQueryResp(w, protocol.CodeExecTSDBSqlError, nil)
-		return
+		return nil, protocol.CodeExecTSDBSqlError
 	}
 
 	for _, row := range results {
@@ -50,5 +38,18 @@ func QueryCurves(w http.ResponseWriter, r *http.Request) {
 		curveList = append(curveList, tags)
 	}
 
-	protocol.WriteQueryResp(w, protocol.CodeOK, curveList)
+	return curveList, protocol.CodeOK
+}
+
+func QueryCurves(w http.ResponseWriter, r *http.Request) {
+	var req protocol.MetricReq
+	err := protocol.DecodeRequest(r, &req)
+	if err != nil {
+		newlog.Error("queryCurves: decode query request failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
+		return
+	}
+
+	curveList, code := internalQueryCurves(&req)
+	protocol.WriteQueryResp(w, code, curveList)
 }

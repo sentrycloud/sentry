@@ -5,7 +5,11 @@ import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"net/http"
+	"strings"
 )
+
+const OneDayMilliseconds = 3600 * 24 * 1000
+const LineCountLimit = 100 // limit the max line count that a query can take
 
 type ChartDataReq struct {
 	dbmodel.Chart
@@ -14,7 +18,7 @@ type ChartDataReq struct {
 }
 
 type ChartData struct {
-	protocol.CurveData
+	*protocol.CurveData
 	Name string `json:"name"`
 }
 
@@ -40,49 +44,100 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chartDataReq.Start *= 1000 // transfer to milliseconds
-	chartDataReq.End *= 1000
-	var curveDataList []ChartData
-	for _, line := range lines {
+	if chartDataReq.Type == "topN" {
+		if len(lines) != 1 {
+			newlog.Error("topN can have one line only")
+			protocol.WriteQueryResp(w, protocol.CodeInvalidParamError, nil)
+			return
+		}
+
 		var tags = map[string]string{}
-		err = protocol.Json.UnmarshalFromString(line.Tags, &tags)
+		err = protocol.Json.UnmarshalFromString(lines[0].Tags, &tags)
 		if err != nil {
-			newlog.Error("unmarshal tags failed for charId=%d, lineId=%d, tags=%s", chartDataReq.ID, line.ID, line.Tags)
-			continue
+			newlog.Error("unmarshal tags failed for charId=%d, lineId=%d, tags=%s", chartDataReq.ID, lines[0].ID, lines[0].Tags)
+			protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
+			return
 		}
 
-		m := protocol.MetricReq{
-			Metric: line.Metric,
-			Tags:   tags,
+		req := protocol.TopNRequest{
+			Start:      chartDataReq.Start,
+			End:        chartDataReq.End,
+			Aggregator: chartDataReq.Aggregation,
+			DownSample: downSample,
+			Limit:      chartDataReq.TopnLimit,
+			Order:      "desc",
+			Metric:     lines[0].Metric,
+			Tags:       tags,
 		}
 
-		offset := int64(line.Offset * 3600 * 24 * 1000)
-		sql := buildRangeQuerySql(chartDataReq.Start+offset, chartDataReq.End+offset, chartDataReq.Aggregation, downSample, &m)
-		results, e := QueryTSDB(sql, 2)
-		if e != nil {
-			newlog.Error("query TSDB failed: %v", e) // log the error, but still return success
-			continue
-		}
-
-		var dataPoints []protocol.TimeValuePoint
-		for _, row := range results {
-			point := protocol.TimeValuePoint{
-				TimeStamp: (row[0].(int64) - offset) / 1000, // add back offset, so data can be displayed on the same axis
-				Value:     row[1].(float64),
+		topNDataList, code := internalQueryTopN(&req)
+		protocol.WriteQueryResp(w, code, topNDataList)
+	} else {
+		chartDataReq.Start *= 1000 // transfer to milliseconds
+		chartDataReq.End *= 1000
+		var chartDataList []ChartData
+		for _, line := range lines {
+			var tags = map[string]string{}
+			err = protocol.Json.UnmarshalFromString(line.Tags, &tags)
+			if err != nil {
+				newlog.Error("unmarshal tags failed for charId=%d, lineId=%d, tags=%s", chartDataReq.ID, line.ID, line.Tags)
+				continue
 			}
 
-			dataPoints = append(dataPoints, point)
-		}
+			metricReq := protocol.MetricReq{
+				Metric: line.Metric,
+				Tags:   tags,
+			}
 
-		curveData := ChartData{
-			Name: line.Name,
-		}
-		curveData.Metric = line.Metric
-		curveData.Tags = tags
-		curveData.DPS = dataPoints
+			curveList, code := internalQueryCurves(&metricReq)
+			if code != protocol.CodeOK || curveList == nil {
+				continue
+			}
 
-		curveDataList = append(curveDataList, curveData)
+			if len(curveList) > LineCountLimit {
+				// do not query too many line once, that maybe hog too much resource
+				curveList = curveList[:LineCountLimit]
+			}
+
+			for _, curve := range curveList {
+				m := protocol.MetricReq{
+					Metric: line.Metric,
+					Tags:   curve,
+				}
+				offset := int64(line.Offset * OneDayMilliseconds)
+				curveData, retCode := internalQueryRange(chartDataReq.Start, chartDataReq.End, offset, chartDataReq.Aggregation, downSample, &m)
+				if retCode != protocol.CodeOK {
+					continue // query error still return success
+				}
+
+				lineName := getLineName(line.Name, len(curveList), tags, curve)
+				chartData := ChartData{
+					CurveData: curveData,
+					Name:      lineName,
+				}
+
+				chartDataList = append(chartDataList, chartData)
+			}
+		}
+		protocol.WriteQueryResp(w, protocol.CodeOK, chartDataList)
+	}
+}
+
+func getLineName(lineName string, curveCount int, tags, curve map[string]string) string {
+	if curveCount <= 1 {
+		return lineName
 	}
 
-	protocol.WriteQueryResp(w, protocol.CodeOK, curveDataList)
+	// tag value has *, use tagValue as name to differentiate each other
+	lineName = ""
+	for k, v := range curve {
+		oldV := tags[k]
+		if strings.HasSuffix(oldV, "*") {
+			if len(lineName) > 0 {
+				lineName += "-"
+			}
+			lineName += v
+		}
+	}
+	return lineName
 }

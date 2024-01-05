@@ -118,6 +118,7 @@ type TopNRequest struct {
 
 type TopNData struct {
 	Metric string            `json:"metric"`
+	Name   string            `json:"name"`
 	Tags   map[string]string `json:"tags"`
 	Value  float64           `json:"value"`
 }

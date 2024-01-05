@@ -232,8 +232,8 @@ func validateChartParam(chart *ChartParams) error {
 		return errors.New("chart name is empty")
 	}
 
-	if chart.Type != "line" && chart.Type != "pie" && chart.Type != "bar" {
-		return errors.New("chart type not in line/pie/bar")
+	if chart.Type != "line" && chart.Type != "pie" && chart.Type != "topN" {
+		return errors.New("chart type not in line/pie/topN")
 	}
 
 	if chart.Aggregation != "sum" && chart.Aggregation != "avg" && chart.Aggregation != "max" && chart.Aggregation != "min" {
@@ -259,7 +259,7 @@ func validateChartParam(chart *ChartParams) error {
 		}
 
 		var tags = make(map[string]string)
-		err := protocol.Json.UnmarshalFromString(line.Tags, &tags)
+		err = protocol.Json.UnmarshalFromString(line.Tags, &tags)
 		if err != nil {
 			return errors.New("can not unmarshal tags: " + err.Error())
 		}

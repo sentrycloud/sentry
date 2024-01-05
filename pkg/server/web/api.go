@@ -68,7 +68,7 @@ func Start(serverConfig *config.ServerConfig, server *collector.Collector) {
 	mux.HandleFunc(protocol.TagValueUrl, tsdb.QueryTagValues)
 	mux.HandleFunc(protocol.CurveUrl, tsdb.QueryCurves)
 	mux.HandleFunc(protocol.RangeUrl, tsdb.QueryTimeSeriesDataForRange)
-	mux.HandleFunc(protocol.TopNUrl, tsdb.QueryTopn)
+	mux.HandleFunc(protocol.TopNUrl, tsdb.QueryTopN)
 	mux.HandleFunc(protocol.ChartDataUrl, tsdb.QueryChartData)
 
 	mux.HandleFunc(protocol.AlarmRuleUrl, mysql.HandleAlarmRule)
