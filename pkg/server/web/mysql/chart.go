@@ -25,43 +25,40 @@ func HandleChart(w http.ResponseWriter, r *http.Request) {
 	case "DELETE":
 		deleteChart(w, r)
 	default:
-		protocol.MethodNotSupport(w, r)
+		protocol.MethodNotSupport(w)
 	}
 }
 
 func HandleChartList(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		protocol.MethodNotSupport(w, r)
+		protocol.MethodNotSupport(w)
 		return
 	}
 
 	// request body format: {"dashboard_id": xxx}
 	var chart dbmodel.Chart
-	err := protocol.Json.NewDecoder(r.Body).Decode(&chart)
+	err := protocol.DecodeRequest(r, &chart)
 	if err != nil {
-		errMsg := "json decode failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		newlog.Error("json decode failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	chartList, err := dbmodel.QueryDashboardCharts(chart.DashboardId)
 	if err != nil {
-		errMsg := "query chart list failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 2, errMsg, nil)
+		newlog.Error("query chart list failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
-	protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", chartList)
+	protocol.WriteQueryResp(w, protocol.CodeOK, chartList)
 }
 
 func getChart(w http.ResponseWriter, r *http.Request) {
 	chartId, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
-		errMsg := "get chartId failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		newlog.Error("get chartId failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
@@ -69,42 +66,37 @@ func getChart(w http.ResponseWriter, r *http.Request) {
 	chart.ID = uint32(chartId)
 	err = dbmodel.GetEntity(&chart)
 	if err != nil {
-		errMsg := "query chart entity failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		newlog.Error("query chart entity failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
 	lines, err := dbmodel.QueryChatLines(chart.ID)
 	if err != nil {
-		errMsg := "query chart lines failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		newlog.Error("query chart lines failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
 	var chartParams ChartParams
 	chartParams.Chart = chart
 	chartParams.Lines = lines
-
-	protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", &chartParams)
+	protocol.WriteQueryResp(w, protocol.CodeOK, &chartParams)
 }
 
 func addChart(w http.ResponseWriter, r *http.Request) {
 	var chartParams ChartParams
-	err := protocol.Json.NewDecoder(r.Body).Decode(&chartParams)
+	err := protocol.DecodeRequest(r, &chartParams)
 	if err != nil {
-		errMsg := "json decode failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		newlog.Error("json decode failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	err = validateChartParam(&chartParams)
 	if err != nil {
-		errMsg := "validate params failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 2, errMsg, nil)
+		newlog.Error("validate params failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeInvalidParamError, nil)
 		return
 	}
 
@@ -112,9 +104,8 @@ func addChart(w http.ResponseWriter, r *http.Request) {
 	// add chart
 	err = dbmodel.AddEntity(&chartParams.Chart)
 	if err != nil {
-		errMsg := "add chart to db failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 3, errMsg, nil)
+		newlog.Error("add chart to db failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
@@ -123,47 +114,42 @@ func addChart(w http.ResponseWriter, r *http.Request) {
 		line.ChartId = chartParams.Chart.ID // update just insert chartId for all lines
 		err = dbmodel.AddEntity(&line)
 		if err != nil {
-			errMsg := "add line to db failed: " + err.Error()
-			newlog.Error(errMsg)
-			protocol.WriteQueryResp(w, http.StatusOK, 4, errMsg, nil)
+			newlog.Error("add line to db failed: %v", err)
+			protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 			return
 		}
 	}
 
-	protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", nil)
+	protocol.WriteQueryResp(w, protocol.CodeOK, nil)
 }
 
 func modifyChart(w http.ResponseWriter, r *http.Request) {
 	var chartParams ChartParams
-	err := protocol.Json.NewDecoder(r.Body).Decode(&chartParams)
+	err := protocol.DecodeRequest(r, &chartParams)
 	if err != nil {
-		errMsg := "json decode failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		newlog.Error("json decode failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	err = validateChartParam(&chartParams)
 	if err != nil {
-		errMsg := "validate params failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 2, errMsg, nil)
+		newlog.Error("validate params failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeInvalidParamError, nil)
 		return
 	}
 
 	err = dbmodel.UpdateEntity(&chartParams.Chart)
 	if err != nil {
-		errMsg := "update db failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 3, errMsg, nil)
+		newlog.Error("update db failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
 	oldLines, err := dbmodel.QueryChatLines(chartParams.ID)
 	if err != nil {
-		errMsg := "query chart lines failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 4, errMsg, nil)
+		newlog.Error("query chart lines failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
@@ -194,9 +180,8 @@ func modifyChart(w http.ResponseWriter, r *http.Request) {
 	for _, line := range updateLines {
 		err = dbmodel.UpdateEntity(&line)
 		if err != nil {
-			errMsg := "update chart line failed: " + err.Error()
-			newlog.Error(errMsg)
-			protocol.WriteQueryResp(w, http.StatusOK, 5, errMsg, nil)
+			newlog.Error("update chart line failed: %v", err)
+			protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 			return
 		}
 	}
@@ -204,9 +189,8 @@ func modifyChart(w http.ResponseWriter, r *http.Request) {
 	for _, line := range addLines {
 		err = dbmodel.AddEntity(&line)
 		if err != nil {
-			errMsg := "add chart line failed: " + err.Error()
-			newlog.Error(errMsg)
-			protocol.WriteQueryResp(w, http.StatusOK, 6, errMsg, nil)
+			newlog.Error("add chart line failed: %v", err)
+			protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 			return
 		}
 	}
@@ -214,36 +198,33 @@ func modifyChart(w http.ResponseWriter, r *http.Request) {
 	if len(deleteLineIds) > 0 {
 		err = dbmodel.DeleteLines(deleteLineIds)
 		if err != nil {
-			errMsg := "delete chart line failed: " + err.Error()
-			newlog.Error(errMsg)
-			protocol.WriteQueryResp(w, http.StatusOK, 7, errMsg, nil)
+			newlog.Error("delete chart line failed: %v", err)
+			protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 			return
 		}
 	}
 
-	protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", nil)
+	protocol.WriteQueryResp(w, protocol.CodeOK, nil)
 }
 
 func deleteChart(w http.ResponseWriter, r *http.Request) {
 	var chart dbmodel.Chart
-	err := protocol.Json.NewDecoder(r.Body).Decode(&chart)
+	err := protocol.DecodeRequest(r, &chart)
 	if err != nil {
-		errMsg := "json decode failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		newlog.Error("json decode failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	newlog.Info("delete chart: dashboardId=%d, chartId=%d", chart.DashboardId, chart.ID)
 	err = dbmodel.DeleteChartAndLines(chart.ID)
 	if err != nil {
-		errMsg := "delete in db failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 2, errMsg, nil)
+		newlog.Error("delete in db failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
-	protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", nil)
+	protocol.WriteQueryResp(w, protocol.CodeOK, nil)
 }
 
 func validateChartParam(chart *ChartParams) error {

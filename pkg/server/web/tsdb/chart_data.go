@@ -20,27 +20,23 @@ type ChartData struct {
 
 func QueryChartData(w http.ResponseWriter, r *http.Request) {
 	var chartDataReq ChartDataReq
-	err := protocol.Json.NewDecoder(r.Body).Decode(&chartDataReq)
+	err := protocol.DecodeRequest(r, &chartDataReq)
 	if err != nil {
-		errMsg := "json decode failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 1, errMsg, nil)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	downSample, err := protocol.TransferDownSample(chartDataReq.DownSample)
 	if err != nil || downSample == 0 {
-		errMsg := "parse downSample failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 2, errMsg, nil)
+		newlog.Error("parse downSample failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeDownSampleError, nil)
 		return
 	}
 
 	lines, err := dbmodel.QueryChatLines(chartDataReq.ID)
 	if err != nil {
-		errMsg := "query mysql failed: " + err.Error()
-		newlog.Error(errMsg)
-		protocol.WriteQueryResp(w, http.StatusOK, 3, errMsg, nil)
+		newlog.Error("query mysql failed: %v", err)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
@@ -64,6 +60,7 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 		sql := buildRangeQuerySql(chartDataReq.Start+offset, chartDataReq.End+offset, chartDataReq.Aggregation, downSample, &m)
 		results, e := QueryTSDB(sql, 2)
 		if e != nil {
+			newlog.Error("query TSDB failed: %v", e) // log the error, but still return success
 			continue
 		}
 
@@ -87,9 +84,5 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 		curveDataList = append(curveDataList, curveData)
 	}
 
-	var resp = protocol.QueryResp{}
-	resp.Code = CodeOK
-	resp.Msg = CodeMsg[CodeOK]
-	resp.Data = curveDataList
-	writeQueryResp(w, http.StatusOK, &resp)
+	protocol.WriteQueryResp(w, protocol.CodeOK, curveDataList)
 }

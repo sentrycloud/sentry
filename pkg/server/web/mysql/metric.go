@@ -19,6 +19,6 @@ func HandleMetricWhiteList(w http.ResponseWriter, r *http.Request) {
 	case "DELETE":
 		modifyEntity(w, r, dbmodel.DeleteEntity, &entity)
 	default:
-		protocol.MethodNotSupport(w, r)
+		protocol.MethodNotSupport(w)
 	}
 }

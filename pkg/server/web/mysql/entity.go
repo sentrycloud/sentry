@@ -10,26 +10,26 @@ import (
 func queryAllEntities(w http.ResponseWriter, entities interface{}) {
 	err := dbmodel.QueryAllEntity(&entities)
 	if err != nil {
-		protocol.WriteQueryResp(w, http.StatusInternalServerError, 1, "db query failed", nil)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 	} else {
-		protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", entities)
+		protocol.WriteQueryResp(w, protocol.CodeOK, entities)
 	}
 }
 
 func modifyEntity(w http.ResponseWriter, r *http.Request, modifyFunc func(interface{}) error, entity interface{}) {
-	err := protocol.Json.NewDecoder(r.Body).Decode(entity)
+	err := protocol.DecodeRequest(r, entity)
 	if err != nil {
 		newlog.Error("json decode failed: %v", err)
-		protocol.WriteQueryResp(w, http.StatusInternalServerError, 2, "json decoder failed", nil)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	err = modifyFunc(entity)
 	if err != nil {
 		newlog.Error("db modify failed: %v", err)
-		protocol.WriteQueryResp(w, http.StatusInternalServerError, 3, "db modify failed", nil)
+		protocol.WriteQueryResp(w, protocol.CodeExecMySQLError, nil)
 		return
 	}
 
-	protocol.WriteQueryResp(w, http.StatusOK, 0, "ok", entity)
+	protocol.WriteQueryResp(w, protocol.CodeOK, entity)
 }

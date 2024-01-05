@@ -8,39 +8,29 @@ import (
 
 func QueryTagValues(w http.ResponseWriter, r *http.Request) {
 	var req protocol.MetricReq
-	var resp = protocol.QueryResp{}
-	err := protocol.Json.NewDecoder(r.Body).Decode(&req)
+	err := protocol.DecodeRequest(r, &req)
 	if err != nil {
-		newlog.Error("queryTagValues: decode query request failed: %v", err)
-		resp.Code = CodeJsonDecodeError
-		resp.Msg = CodeMsg[CodeJsonDecodeError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	starTags, noStarTags, err := splitTags(req.Tags)
 	if err != nil {
 		newlog.Error("queryTagValues: splitTags failed: %v", err)
-		resp.Code = CodeSplitTagsError
-		resp.Msg = CodeMsg[CodeSplitTagsError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
+		protocol.WriteQueryResp(w, protocol.CodeSplitTagsError, nil)
 		return
 	}
 
 	if len(starTags) != 1 {
 		newlog.Error("queryTagValues: too many or no star tags ")
-		resp.Code = CodeStarKeysError
-		resp.Msg = CodeMsg[CodeStarKeysError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
+		protocol.WriteQueryResp(w, protocol.CodeStarKeysError, nil)
 		return
 	}
 
 	sql, _ := buildCurvesRequest(req.Metric, noStarTags, starTags)
 	results, err := QueryTSDB(sql, 1)
 	if err != nil {
-		resp.Code = CodeExecSqlError
-		resp.Msg = CodeMsg[CodeExecSqlError]
-		WriteQueryResp(w, http.StatusOK, &resp)
+		protocol.WriteQueryResp(w, protocol.CodeExecTSDBSqlError, nil)
 		return
 	}
 
@@ -51,8 +41,5 @@ func QueryTagValues(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp.Code = CodeOK
-	resp.Msg = CodeMsg[CodeOK]
-	resp.Data = tagValues
-	writeQueryResp(w, http.StatusOK, &resp)
+	protocol.WriteQueryResp(w, protocol.CodeOK, tagValues)
 }

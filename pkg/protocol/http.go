@@ -30,6 +30,44 @@ const (
 	PutMetricsUrl = "/server/api/putMetrics"
 )
 
+const (
+	CodeOK                 = 0
+	CodeApiNotFound        = 1
+	CodeMethodNotFound     = 2
+	CodeJsonDecodeError    = 3
+	CodeInvalidParamError  = 4
+	CodeGetConnPoolError   = 5
+	CodeExecTSDBSqlError   = 6
+	CodeSplitTagsError     = 7
+	CodeStarKeysError      = 8
+	CodeMaxQueryRangeError = 9
+	CodeAggregatorError    = 10
+	CodeDownSampleError    = 11
+	CodeMetricError        = 12
+	CodeTagCountError      = 13
+	CodeOrderError         = 14
+	CodeExecMySQLError     = 15
+)
+
+var CodeMsg = map[int]string{
+	CodeOK:                 "ok",
+	CodeApiNotFound:        "api not found",
+	CodeMethodNotFound:     "http method not found",
+	CodeJsonDecodeError:    "json decode error",
+	CodeInvalidParamError:  "invalid parameter error",
+	CodeGetConnPoolError:   "get conn pool error",
+	CodeExecTSDBSqlError:   "TSDB SQL execution error",
+	CodeSplitTagsError:     "split tags error",
+	CodeStarKeysError:      "star keys error",
+	CodeMaxQueryRangeError: "max query range error",
+	CodeAggregatorError:    "aggregator error",
+	CodeDownSampleError:    "down sample error",
+	CodeMetricError:        "metric error",
+	CodeTagCountError:      "too many tag count error",
+	CodeOrderError:         "no such order for topN query",
+	CodeExecMySQLError:     "MySQL execution error",
+}
+
 type MetricReq struct {
 	Metric  string              `json:"metric"`
 	Tags    map[string]string   `json:"tags"`
@@ -125,23 +163,37 @@ func CollectHttpMetrics(w http.ResponseWriter, req *http.Request) ([]MetricValue
 	return values, nil
 }
 
-func WriteQueryResp(w http.ResponseWriter, status int, code int, msg string, data interface{}) {
+// DecodeRequest decode and write err log in one place
+func DecodeRequest(r *http.Request, entity interface{}) error {
+	err := Json.NewDecoder(r.Body).Decode(entity)
+	if err != nil {
+		newlog.Error("json decode failed: %v", err)
+	}
+	return err
+}
+
+func WriteQueryResp(w http.ResponseWriter, code int, data interface{}) {
+	httpStatus := http.StatusOK
+	msg, exist := CodeMsg[code]
+	if !exist {
+		msg = "unknown error"
+	}
 	var resp = &QueryResp{}
 	resp.Code = code
 	resp.Msg = msg
 	resp.Data = data
 	jsonData, err := Json.Marshal(resp)
 	if err != nil {
-		newlog.Error("marsh query response failed")
-		status = http.StatusInternalServerError
+		newlog.Error("marsh query response failed: %v", err)
+		httpStatus = http.StatusInternalServerError
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(status)
+	w.WriteHeader(httpStatus)
 	w.Write(jsonData)
 }
 
-func MethodNotSupport(w http.ResponseWriter, r *http.Request) {
-	WriteQueryResp(w, http.StatusBadRequest, 1, "http method not support", nil)
+func MethodNotSupport(w http.ResponseWriter) {
+	WriteQueryResp(w, CodeMethodNotFound, nil)
 }

@@ -3,9 +3,7 @@ package tsdb
 import (
 	"errors"
 	"fmt"
-	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
-	"net/http"
 	"strings"
 	"time"
 )
@@ -15,55 +13,6 @@ const (
 	MaxDownSample = 3600 * 24     // max down sample is 1 day
 	MaxTagCount   = 16
 )
-
-const (
-	CodeOK                 = 0
-	CodeApiNotFound        = 1
-	CodeJsonDecodeError    = 2
-	CodeGetConnPoolError   = 3
-	CodeExecSqlError       = 4
-	CodeSplitTagsError     = 5
-	CodeStarKeysError      = 6
-	CodeMaxQueryRangeError = 7
-	CodeAggregatorError    = 8
-	CodeDownSampleError    = 9
-	CodeMetricError        = 10
-	CodeTagCountError      = 11
-	CodeOrderError         = 12
-)
-
-var CodeMsg = map[int]string{
-	CodeOK:                 "ok",
-	CodeApiNotFound:        "api not found",
-	CodeJsonDecodeError:    "json decode error",
-	CodeGetConnPoolError:   "get conn pool error",
-	CodeExecSqlError:       "exec SQL error",
-	CodeSplitTagsError:     "split tags error",
-	CodeStarKeysError:      "star keys error",
-	CodeMaxQueryRangeError: "max query range error",
-	CodeAggregatorError:    "aggregator error",
-	CodeDownSampleError:    "down sample error",
-	CodeMetricError:        "metric error",
-	CodeTagCountError:      "too many tag count error",
-	CodeOrderError:         "no such order",
-}
-
-func writeQueryResp(w http.ResponseWriter, status int, resp *protocol.QueryResp) {
-	data, err := protocol.Json.Marshal(resp)
-	if err != nil {
-		newlog.Error("marsh query response failed")
-		status = http.StatusInternalServerError
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(status)
-	w.Write(data)
-}
-
-func WriteQueryResp(w http.ResponseWriter, status int, resp *protocol.QueryResp) {
-	writeQueryResp(w, status, resp)
-}
 
 func splitTags(tags map[string]string) (map[string]string, map[string]string, error) {
 	var starTags = make(map[string]string)
@@ -130,7 +79,7 @@ func checkAndTransferTime(last int64, start *int64, end *int64) int {
 	if last != 0 {
 		// request with last field, so time range will be [now - last, now)
 		if last > MaxQueryRange {
-			return CodeMaxQueryRangeError
+			return protocol.CodeMaxQueryRangeError
 		}
 
 		*end = time.Now().Unix()
@@ -142,16 +91,16 @@ func checkAndTransferTime(last int64, start *int64, end *int64) int {
 		}
 
 		if *end-*start > MaxQueryRange {
-			return CodeMaxQueryRangeError
+			return protocol.CodeMaxQueryRangeError
 		}
 	}
 
-	return CodeOK
+	return protocol.CodeOK
 }
 
 func alignWithDownSample(downSample int64, start *int64, end *int64) int {
 	if downSample == 0 || downSample > MaxDownSample {
-		return CodeDownSampleError
+		return protocol.CodeDownSampleError
 	}
 
 	*start = *start / downSample * downSample * 1000
@@ -159,16 +108,16 @@ func alignWithDownSample(downSample int64, start *int64, end *int64) int {
 		*end -= 1
 	}
 	*end *= 1000
-	return CodeOK
+	return protocol.CodeOK
 }
 
 func splitTagFilters(metric string, reqTags map[string]string) (string, map[string]string, map[string][]string, int) {
 	if len(metric) == 0 {
-		return "", nil, nil, CodeMetricError
+		return "", nil, nil, protocol.CodeMetricError
 	}
 
 	if len(reqTags) > MaxTagCount {
-		return "", nil, nil, CodeTagCountError
+		return "", nil, nil, protocol.CodeTagCountError
 	}
 
 	var starKey string
@@ -176,7 +125,7 @@ func splitTagFilters(metric string, reqTags map[string]string) (string, map[stri
 	filters := make(map[string][]string)
 	for k, v := range reqTags {
 		if strings.Contains(k, "*") {
-			return "", nil, nil, CodeStarKeysError
+			return "", nil, nil, protocol.CodeStarKeysError
 		}
 
 		if strings.Contains(v, "*") {
@@ -191,72 +140,72 @@ func splitTagFilters(metric string, reqTags map[string]string) (string, map[stri
 		}
 	}
 
-	return starKey, tags, filters, CodeOK
+	return starKey, tags, filters, protocol.CodeOK
 }
 
 func transferTimeSeriesDataRequest(req *protocol.TimeSeriesDataRequest) int {
 	code := checkAndTransferTime(req.Last, &req.Start, &req.End)
-	if code != CodeOK {
+	if code != protocol.CodeOK {
 		return code
 	}
 
 	code = alignWithDownSample(req.DownSample, &req.Start, &req.End)
-	if code != CodeOK {
+	if code != protocol.CodeOK {
 		return code
 	}
 
 	var err error
 	req.Aggregator, err = protocol.CheckAggregator(req.Aggregator)
 	if err != nil {
-		return CodeAggregatorError
+		return protocol.CodeAggregatorError
 	}
 
 	for _, m := range req.Metrics {
 		var starKey string
 		starKey, m.Tags, m.Filters, code = splitTagFilters(m.Metric, m.Tags)
-		if code != CodeOK {
+		if code != protocol.CodeOK {
 			return code
 		}
 
 		if len(starKey) > 0 {
-			return CodeStarKeysError
+			return protocol.CodeStarKeysError
 		}
 	}
 
-	return CodeOK
+	return protocol.CodeOK
 }
 
 func transferTopnRequest(req *protocol.TopNRequest) int {
 	code := checkAndTransferTime(req.Last, &req.Start, &req.End)
-	if code != CodeOK {
+	if code != protocol.CodeOK {
 		return code
 	}
 
 	code = alignWithDownSample(req.DownSample, &req.Start, &req.End)
-	if code != CodeOK {
+	if code != protocol.CodeOK {
 		return code
 	}
 
 	var err error
 	req.Aggregator, err = protocol.CheckAggregator(req.Aggregator)
 	if err != nil {
-		return CodeAggregatorError
+		return protocol.CodeAggregatorError
 	}
 
 	req.Order, err = protocol.CheckOrder(req.Order)
 	if err != nil {
-		return CodeOrderError
+		return protocol.CodeOrderError
 	}
 
 	req.Field, req.Tags, req.Filters, code = splitTagFilters(req.Metric, req.Tags)
-	if code != CodeOK {
+	if code != protocol.CodeOK {
 		return code
 	}
 
 	if len(req.Field) == 0 {
-		return CodeStarKeysError
+		return protocol.CodeStarKeysError
 	}
-	return CodeOK
+	return protocol.CodeOK
 }
 
 func tagsToCondition(tags map[string]string) string {

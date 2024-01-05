@@ -2,7 +2,6 @@ package tsdb
 
 import (
 	"fmt"
-	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"net/http"
 )
@@ -10,22 +9,16 @@ import (
 // QueryMetrics all metrics that start with the name in the request
 func QueryMetrics(w http.ResponseWriter, r *http.Request) {
 	var m protocol.MetricReq
-	var resp = protocol.QueryResp{}
-	err := protocol.Json.NewDecoder(r.Body).Decode(&m)
+	err := protocol.DecodeRequest(r, &m)
 	if err != nil {
-		newlog.Error("queryMetrics: decode query request failed: %v", err)
-		resp.Code = CodeJsonDecodeError
-		resp.Msg = CodeMsg[CodeJsonDecodeError]
-		writeQueryResp(w, http.StatusBadRequest, &resp)
+		protocol.WriteQueryResp(w, protocol.CodeJsonDecodeError, nil)
 		return
 	}
 
 	sql := fmt.Sprintf("show stables like '%%%s%%'", m.Metric)
 	results, err := QueryTSDB(sql, 1)
 	if err != nil {
-		resp.Code = CodeExecSqlError
-		resp.Msg = CodeMsg[CodeExecSqlError]
-		WriteQueryResp(w, http.StatusOK, &resp)
+		protocol.WriteQueryResp(w, protocol.CodeExecTSDBSqlError, nil)
 		return
 	}
 
@@ -36,8 +29,5 @@ func QueryMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp.Code = CodeOK
-	resp.Msg = CodeMsg[CodeOK]
-	resp.Data = metrics
-	writeQueryResp(w, http.StatusOK, &resp)
+	protocol.WriteQueryResp(w, protocol.CodeOK, metrics)
 }
