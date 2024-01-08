@@ -8,6 +8,7 @@ import (
 	"github.com/sentrycloud/sentry/pkg/server/collector"
 	"github.com/sentrycloud/sentry/pkg/server/config"
 	"github.com/sentrycloud/sentry/pkg/server/merge"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"github.com/sentrycloud/sentry/pkg/server/taos"
 	"github.com/sentrycloud/sentry/pkg/server/web"
 	"time"
@@ -29,6 +30,8 @@ func main() {
 
 	dbmodel.NewMySQL(&serverConfig.MySQLServer)
 
+	monitor.InitMonitor()
+
 	// create time series database connection pool
 	var connPool = taos.CreateConnPool(serverConfig.TaosServer)
 	// crate merger to send all payload in batch mode
@@ -45,6 +48,14 @@ func main() {
 
 	// start the http collector and query server
 	web.Start(&serverConfig, &server)
+
+	go func() {
+		for {
+			server.CollectMetrics()
+			merger.CollectMetrics()
+			time.Sleep(10 * time.Second)
+		}
+	}()
 
 	newlog.Info("sentry server start complete in %d ms", time.Now().UnixMilli()-startTime)
 	profile.StartProfileInBlockMode(serverConfig.ProfilePort)

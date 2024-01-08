@@ -3,10 +3,14 @@ package mysql
 import (
 	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 func HandleMetricWhiteList(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "metricWhiteList")
+
 	var entity dbmodel.MetricWhiteList
 	switch r.Method {
 	case "GET":

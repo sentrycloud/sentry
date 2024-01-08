@@ -3,10 +3,13 @@ package tsdb
 import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 func QueryTagValues(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "tagValue")
 	var req protocol.MetricReq
 	err := protocol.DecodeRequest(r, &req)
 	if err != nil {

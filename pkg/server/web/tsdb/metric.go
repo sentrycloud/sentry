@@ -3,11 +3,15 @@ package tsdb
 import (
 	"fmt"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 // QueryMetrics all metrics that start with the name in the request
 func QueryMetrics(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "metric")
+	
 	var m protocol.MetricReq
 	err := protocol.DecodeRequest(r, &m)
 	if err != nil {

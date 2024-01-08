@@ -4,8 +4,10 @@ import (
 	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const OneDayMilliseconds = 3600 * 24 * 1000
@@ -23,6 +25,8 @@ type ChartData struct {
 }
 
 func QueryChartData(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "chartData")
+
 	var chartDataReq ChartDataReq
 	err := protocol.DecodeRequest(r, &chartDataReq)
 	if err != nil {

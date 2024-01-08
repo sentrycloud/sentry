@@ -6,6 +6,7 @@ import (
 	"github.com/sentrycloud/sentry/pkg/protocol"
 	"github.com/sentrycloud/sentry/pkg/server/config"
 	"github.com/sentrycloud/sentry/pkg/server/merge"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"io"
 	"net"
 	"strings"
@@ -40,6 +41,10 @@ func (c *Collector) Start(config config.ServerConfig, merger *merge.Merge) {
 	newlog.Info("listen on tcp port %d", c.port)
 	c.listener = listener
 	go c.listen()
+}
+
+func (c *Collector) CollectMetrics() {
+	monitor.AgentCountCollector.Put(float64(c.currentConnCount))
 }
 
 func (c *Collector) listen() {
@@ -122,6 +127,8 @@ func (c *Collector) HandleMetrics(metrics []protocol.MetricValue, clientIP strin
 	}
 
 	if len(filterMetrics) > 0 {
+		monitor.DataPointsCollector.Put(float64(len(filterMetrics)))
+
 		payload, err := protocol.Json.Marshal(filterMetrics)
 		if err != nil {
 			newlog.Error("marshal json failed: %v", err)

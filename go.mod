@@ -6,6 +6,7 @@ require (
 	github.com/RussellLuo/timingwheel v0.0.0-20220218152713-54845bda3108
 	github.com/buger/jsonparser v1.1.1
 	github.com/json-iterator/go v1.1.12
+	github.com/sentrycloud/sentry-sdk-go v1.1.0
 	github.com/taosdata/driver-go/v3 v3.5.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/mysql v1.5.2

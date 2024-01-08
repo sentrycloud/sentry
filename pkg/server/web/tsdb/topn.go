@@ -3,7 +3,9 @@ package tsdb
 import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 func internalQueryTopN(req *protocol.TopNRequest) ([]protocol.TopNData, int) {
@@ -35,6 +37,7 @@ func internalQueryTopN(req *protocol.TopNRequest) ([]protocol.TopNData, int) {
 }
 
 func QueryTopN(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "topN")
 	var req protocol.TopNRequest
 	err := protocol.DecodeRequest(r, &req)
 	if err != nil {

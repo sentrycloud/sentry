@@ -3,11 +3,15 @@ package tsdb
 import (
 	"fmt"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 // QueryTagKeys query all tags of a metric
 func QueryTagKeys(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "tagKey")
+
 	var m protocol.MetricReq
 	err := protocol.DecodeRequest(r, &m)
 	if err != nil {

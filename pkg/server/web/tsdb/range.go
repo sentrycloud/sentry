@@ -3,7 +3,9 @@ package tsdb
 import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 func internalQueryRange(start int64, end int64, offset int64, aggregator string, downSample int64,
@@ -34,6 +36,8 @@ func internalQueryRange(start int64, end int64, offset int64, aggregator string,
 }
 
 func QueryTimeSeriesDataForRange(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "range")
+
 	var req protocol.TimeSeriesDataRequest
 	err := protocol.DecodeRequest(r, &req)
 	if err != nil {

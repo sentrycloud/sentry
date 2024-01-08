@@ -3,10 +3,14 @@ package mysql
 import (
 	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 func HandleContact(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "contact")
+
 	var entity dbmodel.AlarmContact
 	switch r.Method {
 	case "GET":

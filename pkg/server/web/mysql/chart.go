@@ -5,8 +5,10 @@ import (
 	"github.com/sentrycloud/sentry/pkg/dbmodel"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type ChartParams struct {
@@ -15,6 +17,8 @@ type ChartParams struct {
 }
 
 func HandleChart(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "chart")
+
 	switch r.Method {
 	case "GET":
 		getChart(w, r)

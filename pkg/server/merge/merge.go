@@ -3,6 +3,7 @@ package merge
 import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/server/config"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"github.com/sentrycloud/sentry/pkg/server/taos"
 	"strings"
 	"time"
@@ -31,6 +32,11 @@ func CreateMerge(mergeConfig config.MergeConfig, connPool *taos.ConnPool) *Merge
 	merge.resendChan = make(chan string, merge.conf.ChanSize)
 	merge.sendTicker = time.NewTicker(time.Duration(merge.conf.TickInterval) * time.Second)
 	return merge
+}
+
+func (m *Merge) CollectMetrics() {
+	monitor.MergeChanSizeCollector.Put(float64(len(m.mergeChan)))
+	monitor.ResendChanSizeCollector.Put(float64(len(m.resendChan)))
 }
 
 func (m *Merge) MergePayload(payload string) {

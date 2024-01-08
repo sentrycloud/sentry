@@ -3,7 +3,9 @@ package tsdb
 import (
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"github.com/sentrycloud/sentry/pkg/protocol"
+	"github.com/sentrycloud/sentry/pkg/server/monitor"
 	"net/http"
+	"time"
 )
 
 func internalQueryCurves(req *protocol.MetricReq) ([]map[string]string, int) {
@@ -42,6 +44,8 @@ func internalQueryCurves(req *protocol.MetricReq) ([]map[string]string, int) {
 }
 
 func QueryCurves(w http.ResponseWriter, r *http.Request) {
+	defer monitor.AddMonitorStats(time.Now(), "curve")
+	
 	var req protocol.MetricReq
 	err := protocol.DecodeRequest(r, &req)
 	if err != nil {
