@@ -1,5 +1,7 @@
 package dbmodel
 
+import "time"
+
 type AlarmRule struct {
 	Entity
 	Name       string `json:"name"`
@@ -14,4 +16,9 @@ type AlarmRule struct {
 
 func (AlarmRule) TableName() string {
 	return "alarm_rule"
+}
+
+func QueryUpdateRules(updated time.Time, rules *[]AlarmRule) error {
+	result := db.Where("updated >= ?", updated).Find(rules)
+	return result.Error
 }

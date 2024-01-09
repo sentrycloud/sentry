@@ -8,6 +8,7 @@ CREATE TABLE `alarm_contact` (
     `mail` varchar(255) DEFAULT NULL,
     `wechat` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`id`),
+    KEY `idx_updated` (`updated`),
     KEY `idx_deleted` (`is_deleted`),
     KEY `idx_name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -26,9 +27,9 @@ CREATE TABLE `alarm_rule` (
     `data_source` text NOT NULL,
     `trigger` text NOT NULL,
     PRIMARY KEY (`id`),
-    KEY `idx_name` (`name`),
+    KEY `idx_updated` (`updated`),
     KEY `idx_deleted` (`is_deleted`),
-    KEY `idx_updated` (`updated`)
+    KEY `idx_name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `metric_white_list` (

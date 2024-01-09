@@ -3,6 +3,7 @@ package sender
 import (
 	"fmt"
 	"github.com/sentrycloud/sentry/pkg/alarm/config"
+	"github.com/sentrycloud/sentry/pkg/alarm/contact"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"net/smtp"
 )
@@ -25,8 +26,14 @@ func InitMailConfig(config *config.MailConfig) {
 func MailMessage(to string, msg string) {
 	newlog.Info("send mail alarm message: %s to %s", msg, to)
 
+	contacts := contact.GetAlarmContact(to, contact.MailMsg)
+	if len(contacts) == 0 {
+		newlog.Warn("send mail failed: can not find contacts %s", to)
+		return
+	}
+
 	msgBody := fmt.Sprintf(msgFormat, to, msg)
-	err := smtp.SendMail(smtpAddr, auth, mailConfig.From, []string{to}, []byte(msgBody))
+	err := smtp.SendMail(smtpAddr, auth, mailConfig.From, contacts, []byte(msgBody))
 	if err != nil {
 		newlog.Error("send mail failed: %v", err)
 	}

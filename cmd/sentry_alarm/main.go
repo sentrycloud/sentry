@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/sentrycloud/sentry/pkg/alarm/config"
+	"github.com/sentrycloud/sentry/pkg/alarm/contact"
 	"github.com/sentrycloud/sentry/pkg/alarm/query"
 	"github.com/sentrycloud/sentry/pkg/alarm/rule"
 	"github.com/sentrycloud/sentry/pkg/alarm/schedule"
@@ -38,6 +39,8 @@ func main() {
 	if err != nil {
 		return
 	}
+
+	contact.Init()
 
 	ruleManager := rule.NewManager()
 	ruleManager.Start()

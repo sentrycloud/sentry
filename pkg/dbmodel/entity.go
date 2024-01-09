@@ -1,6 +1,7 @@
 package dbmodel
 
 import (
+	"errors"
 	"github.com/sentrycloud/sentry/pkg/newlog"
 	"reflect"
 	"time"
@@ -54,6 +55,12 @@ func QueryAllEntity(entities interface{}) error {
 }
 
 func AddEntity(entity interface{}) error {
+	if contact, ok := entity.(*AlarmContact); ok {
+		if IsContactNameExist(contact.Name) {
+			return errors.New("contact name exist")
+		}
+	}
+
 	fields := getJsonTags(entity)
 	result := db.Select(fields).Create(entity)
 	return result.Error

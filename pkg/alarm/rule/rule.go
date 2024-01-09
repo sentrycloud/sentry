@@ -32,6 +32,7 @@ const (
 )
 
 type BaseRule interface {
+	GetAlarmRule() dbmodel.AlarmRule
 	Parse() error
 	Start()
 	Stop()
@@ -64,6 +65,10 @@ type AlarmRule struct {
 	alarmInterval   time.Duration
 	alarmQueryDelay int64
 	alarmTimer      *timingwheel.Timer
+}
+
+func (r *AlarmRule) GetAlarmRule() dbmodel.AlarmRule {
+	return r.AlarmRule
 }
 
 func (r *AlarmRule) Parse() error {
