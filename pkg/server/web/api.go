@@ -56,7 +56,7 @@ func Start(serverConfig *config.ServerConfig, server *collector.Collector) {
 	tsdb.Init(serverConfig.TaosServer)
 	serverCollector = server
 
-	spaHandler := SPAHandler{staticPath: "../sentry-frontend/build", indexPath: "index.html"}
+	spaHandler := SPAHandler{staticPath: serverConfig.FrontEndPath, indexPath: "index.html"}
 
 	mux := http.NewServeMux()
 	mux.Handle("/", spaHandler)

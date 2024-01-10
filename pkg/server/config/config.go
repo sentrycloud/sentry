@@ -22,6 +22,7 @@ type ServerConfig struct {
 	ProfilePort  int                 `json:"profile_port"`
 	MaxConnCount int                 `json:"max_conn_count"`
 	ScanTable    bool                `json:"scan_table"`
+	FrontEndPath string              `json:"front_end_path"`
 	Log          newlog.LogConfig    `json:"log"`
 	TaosServer   TaosConfig          `json:"taos_server"`
 	MySQLServer  dbmodel.MySQLConfig `json:"mysql_server"`
@@ -41,6 +42,7 @@ func (c *ServerConfig) setDefault() {
 	c.ProfilePort = 51002
 	c.MaxConnCount = 1000
 	c.ScanTable = false
+	c.FrontEndPath = "./frontend"
 
 	c.Log.Path = "logs/sentryServer.log"
 	c.Log.Level = "info"
