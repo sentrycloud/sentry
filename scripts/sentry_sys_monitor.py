@@ -16,13 +16,11 @@ def format_metric(metric, ts, value, tags=None):
     return "{" + metric + "}"
 
 
-def run_shell(cmd, timeout=5):
+def run_shell(cmd):
     try:
-        output = subprocess.check_output(cmd, shell=True, timeout=timeout)
+        output = subprocess.check_output(cmd, shell=True)
         return output.decode("utf-8")
-    except subprocess.TimeoutExpired:
-        return ""
-    except subprocess.CalledProcessError:
+    except Exception as e:
         return ""
 
 
@@ -31,7 +29,7 @@ def sentry_time():
 
 
 def collect():
-    ts = round(int(time.time()) / 10) * 10  # round to cron script interval
+    ts = int(round(int(time.time()) / 10) * 10)  # round to cron script interval
     metrics = []
     collect_cpu(metrics, ts)
     collect_load_avg(metrics, ts)

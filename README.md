@@ -47,18 +47,42 @@ Sentry is a DevOps monitoring system that collect time series data, store data i
 * tar zxvf go1.21.6.linux-amd64.tar.gz -C /usr/local/
 * edit ~/.bash_profile, add /usr/local/go/bin to PATH, setup GOPATH and GOROOT
 
-## Build Sentry
+## Run sentry_server
 * git clone https://github.com/sentrycloud/sentry.git
 * cd sentry/tools
 * ./build.sh
 * inject SQL table and data: mysql> source configs/create_tables.sql;
-* tar zxvf sentry_server.tar.gz -C /run/sentry/path
+* tar zxvf sentry_server.tar.gz -C ~/
 * change to previous path, run: ./sentry_server
 * if everything is OK, it alrealy collect metrics of its own
 * visit: http://localhost:51001
  
 <img src="./docs/dashboard_snapshot.png" width="800" height="600">
 
+## Run sentry_agent
+* install psutil for collect system metrics(for python 2.7):
+	* sudo yum install python-pip
+	* sudo yum install python-devel
+	* sudo pip install psutil==5.6.2
+* for python3.x： sudo pip3 install psutil
+*  unzip sentry_agent package: tar zxvf sentry_agent.tar.gz -C ~/
+*  cd ~/sentry_agent 
+*  ./sentry_agent 
+
+# Usage
+## Dashboard
+* add a new dashboard for system metrics
+<img src="./docs/add_dashboard.png" width="600" height="600">
+* add a new chart for the new empty dashboard
+<img src="./docs/add_chart.png" width="400" height="400">
+* config the new chart
+<img src="./docs/config_chart.png" width="600" height="500">
+* new chart in the new dashboard (add two other chart)
+<img src="./docs/new_dashboard.png" width="600" height="600">
+* change/save chart layout, the charts in dashboard can be draged and resized
+ <img src="./docs/change_layout.png" width="600" height="600">
+
+	 	
 # Roadmap
 - [ ] add more sentry-sdk for other language
 - [ ] add more senty-agent script for system metrics
