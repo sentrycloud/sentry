@@ -14,6 +14,8 @@ Sentry is a DevOps monitoring system that collect time series data, store data i
 
 # Install
 
+*The commands below are under CentOS 7.2*
+
 ## Install TDengine
 * go to [TDengine install page](https://docs.tdengine.com/get-started/package/#!) to download a packge for your OS
 * change to root user
@@ -40,8 +42,22 @@ Sentry is a DevOps monitoring system that collect time series data, store data i
 * mysql> GRANT ALL ON sentry.* TO 'sentry'@'%';
 * reconnect with use sentry: mysql -u sentry -p123456
 * mysql> create database sentry;
-* mysql> source create_tables.sql;
 
+## Install Golang
+* tar zxvf go1.21.6.linux-amd64.tar.gz -C /usr/local/
+* edit ~/.bash_profile, add /usr/local/go/bin to PATH, setup GOPATH and GOROOT
+
+## Build Sentry
+* git clone https://github.com/sentrycloud/sentry.git
+* cd sentry/tools
+* ./build.sh
+* inject SQL table and data: mysql> source configs/create_tables.sql;
+* tar zxvf sentry_server.tar.gz -C /run/sentry/path
+* change to previous path, run: ./sentry_server
+* if everything is OK, it alrealy collect metrics of its own
+* visit: http://localhost:51001
+ 
+<img src="./docs/dashboard_snapshot.png" width="800" height="600">
 
 # Roadmap
 - [ ] add more sentry-sdk for other language

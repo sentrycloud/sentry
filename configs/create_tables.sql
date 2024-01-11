@@ -113,3 +113,55 @@ INSERT INTO `alarm_rule` (`name`, `type`, `query_range`, `contacts`, `level`, `m
     VALUES ('memory compare alarm', 3, 60, 'eric', 1, '{time} memory usage reach {value}, history value: {history.value}, compare value: {compare.value}',
             '{"metric":"sentry_sys_mem_usage", "tags":{"ip":"127.0.0.1"}, "aggregation":"max", "down_sample":10, "compare_type":0, "compare_days_ago":0, "compare_seconds":60}',
             '{"less_than": -8.0, "greater_than": 8.0, "error_count": 1}');
+
+INSERT INTO `dashboard` (`name`, `creator`, `app_name`, `chart_layout`)
+    VALUES ('sentry server monitor', 'eric', 'sentry_server', '[{"w":6,"h":4,"x":0,"y":0,"i":"1","moved":false,"static":true},{"w":6,"h":4,"x":6,"y":0,"i":"2","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":4,"i":"3","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":4,"i":"4","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":4,"i":"5","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":8,"i":"6","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":8,"i":"7","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":8,"i":"8","moved":false,"static":true}]');
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'http QPS', 'line', 'sum', '10s', 10);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'http RT', 'line', 'avg', '10s', 10);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'goroutine number', 'line', 'avg', '10s', 10);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'gc number', 'line', 'avg', '10s', 10);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'gc pause time(ms)', 'line', 'avg', '10s', 10);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'agent number', 'line', 'sum', '10s', 10);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'data points QPS', 'line', 'sum', '10s', 10);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (1, 'merge chan size', 'line', 'max', '10s', 10);
+
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (1, 'qps', 'sentry_server_http_qps', '{"api":"*"}', 0);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (2, 'rt', 'sentry_server_http_rt', '{"api":"*"}', 0);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (3, 'number', 'sentry_go_num', '{}', 0);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (4, 'number', 'sentry_gc_num', '{}', 0);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (5, 'pause', 'sentry_gc_pause', '{}', 0);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (6, 'agent number', 'sentry_server_agent_count', '{}', 0);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (7, 'qps', 'sentry_server_data_point', '{}', 0);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (8, 'chan size', 'sentry_server_chan_size', '{"chan":"*"}', 0);
