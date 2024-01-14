@@ -114,6 +114,7 @@ INSERT INTO `alarm_rule` (`name`, `type`, `query_range`, `contacts`, `level`, `m
             '{"metric":"sentry_sys_mem_usage", "tags":{"ip":"127.0.0.1"}, "aggregation":"max", "down_sample":10, "compare_type":0, "compare_days_ago":0, "compare_seconds":60}',
             '{"less_than": -8.0, "greater_than": 8.0, "error_count": 1}');
 
+/* create dashboard for sentry_server monitor */
 INSERT INTO `dashboard` (`name`, `creator`, `app_name`, `chart_layout`)
     VALUES ('sentry server monitor', 'eric', 'sentry_server', '[{"w":6,"h":4,"x":0,"y":0,"i":"1","moved":false,"static":true},{"w":6,"h":4,"x":6,"y":0,"i":"2","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":4,"i":"3","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":4,"i":"4","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":4,"i":"5","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":8,"i":"6","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":8,"i":"7","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":8,"i":"8","moved":false,"static":true}]');
 
@@ -165,3 +166,79 @@ INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
 
 INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
     VALUES (8, 'chan size', 'sentry_server_chan_size', '{"chan":"*"}', 0);
+
+/* create dashboard for machine monitor (cpu, memory, disk, network ...) */
+INSERT INTO `dashboard` (`name`, `creator`, `app_name`, `chart_layout`)
+    VALUES ('machine monitor', 'eric', 'sentry_agent', '[{"w":4,"h":4,"x":0,"y":0,"i":"9","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":0,"i":"10","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":0,"i":"11","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":4,"i":"12","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":4,"i":"13","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":4,"i":"14","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":8,"i":"15","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":8,"i":"16","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":8,"i":"17","moved":false,"static":true},{"w":6,"h":4,"x":0,"y":12,"i":"18","moved":false,"static":true},{"w":6,"h":4,"x":6,"y":12,"i":"19","moved":false,"static":true}]');
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'cpu usage', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (9, 'cpu', 'sentry_sys_cpu_usage', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'load average', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (10, 'load', 'sentry_sys_load_average', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'memory usage', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (11, 'memory', 'sentry_sys_mem_usage', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'disk usage', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (12, 'disk usage', 'sentry_sys_disk_usage', '{"device":"*"}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'disk io wait', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (13, 'io wait', 'sentry_sys_io_wait', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'disk io util', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (14, 'io util', 'sentry_sys_io_util', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'disk io stats', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (15, 'read bytes/s', 'sentry_sys_io_read', '{}', 0);
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (15, 'write bytes/s', 'sentry_sys_io_write', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'net stats in bytes', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (16, 'bytes sent/s', 'sentry_sys_net_bytes_sent', '{}', 0);
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (16, 'bytes recv/s', 'sentry_sys_net_bytes_recv', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'net stats in packets', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (17, 'packets sent/s', 'sentry_sys_net_packets_sent', '{}', 0);
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (17, 'packets recv/s', 'sentry_sys_net_packets_recv', '{}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'tcp status', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (18, 'status', 'sentry_sys_tcp_status', '{"status":"*"}', 0);
+
+INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
+    VALUES (2, 'process number', 'line', 'max', '10s', 10);
+
+INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
+    VALUES (19, 'number', 'sentry_sys_process_number', '{}', 0);

@@ -83,6 +83,10 @@ func (r *Reporter) processMetrics(metrics []protocol.MetricValue) {
 			continue
 		}
 
+		if metric.Tags == nil {
+			metric.Tags = make(map[string]string)
+		}
+
 		_, exist := metric.Tags["sentryIP"]
 		if !exist {
 			metric.Tags["sentryIP"] = r.localIP // if tags not contain sentryIP, agent add local ip to tags
