@@ -60,11 +60,6 @@ Sentry is a DevOps monitoring system that collect time series data, store data i
 <img src="./docs/dashboard_snapshot.png" width="800" height="600">
 
 ## Run sentry_agent
-* install psutil for collect system metrics(for python 2.7):
-	* sudo yum install python-pip
-	* sudo yum install python-devel
-	* sudo pip install psutil==5.6.2
-* for python3.x： sudo pip3 install psutil
 *  unzip sentry_agent package: tar zxvf sentry_agent.tar.gz -C ~/
 *  cd ~/sentry_agent 
 *  ./sentry_agent 

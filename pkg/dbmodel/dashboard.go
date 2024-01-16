@@ -6,6 +6,8 @@ type Dashboard struct {
 	Creator     string `json:"creator"`
 	AppName     string `json:"app_name"`
 	ChartLayout string `json:"chart_layout"`
+	TagFilter   string `json:"tag_filter"`
+	SavedStatus string `json:"saved_status"`
 }
 
 func (Dashboard) TableName() string {
