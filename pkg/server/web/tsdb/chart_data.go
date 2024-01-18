@@ -15,8 +15,9 @@ const LineCountLimit = 100 // limit the max line count that a query can take
 
 type ChartDataReq struct {
 	dbmodel.Chart
-	Start int64 `json:"start"`
-	End   int64 `json:"end"`
+	Start  int64             `json:"start"`
+	End    int64             `json:"end"`
+	Filter map[string]string `json:"filter"`
 }
 
 type ChartData struct {
@@ -71,7 +72,7 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 			Limit:      chartDataReq.TopnLimit,
 			Order:      "desc",
 			Metric:     lines[0].Metric,
-			Tags:       tags,
+			Tags:       filterTags(lines[0].Metric, tags, chartDataReq.Filter),
 		}
 
 		topNDataList, code := internalQueryTopN(&req)
@@ -90,7 +91,7 @@ func QueryChartData(w http.ResponseWriter, r *http.Request) {
 
 			metricReq := protocol.MetricReq{
 				Metric: line.Metric,
-				Tags:   tags,
+				Tags:   filterTags(line.Metric, tags, chartDataReq.Filter),
 			}
 
 			curveList, code := internalQueryCurves(&metricReq)
@@ -144,4 +145,33 @@ func getLineName(lineName string, curveCount int, tags, curve map[string]string)
 		}
 	}
 	return lineName
+}
+
+func filterTags(metric string, tags map[string]string, filter map[string]string) map[string]string {
+	if filter == nil || len(filter) == 0 {
+		return tags
+	}
+
+	metricTagKeys, code := internalQueryTagKeys(metric)
+	if code != protocol.CodeOK {
+		return tags
+	}
+
+	for k, v := range filter {
+		if contains(metricTagKeys, k) {
+			tags[k] = v
+		}
+	}
+
+	return tags
+}
+
+func contains(keys []string, key string) bool {
+	for _, k := range keys {
+		if k == key {
+			return true
+		}
+	}
+
+	return false
 }

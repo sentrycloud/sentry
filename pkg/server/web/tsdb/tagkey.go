@@ -8,6 +8,23 @@ import (
 	"time"
 )
 
+func internalQueryTagKeys(metric string) ([]string, int) {
+	sql := fmt.Sprintf("desc `%s`", metric)
+	results, err := QueryTSDB(sql, 4)
+	if err != nil {
+		return nil, protocol.CodeExecTSDBSqlError
+	}
+
+	var tags []string
+	for _, row := range results {
+		note := row[3].(string)
+		if note == "TAG" {
+			tags = append(tags, row[0].(string))
+		}
+	}
+	return tags, protocol.CodeOK
+}
+
 // QueryTagKeys query all tags of a metric
 func QueryTagKeys(w http.ResponseWriter, r *http.Request) {
 	defer monitor.AddMonitorStats(time.Now(), "tagKey")
@@ -19,20 +36,6 @@ func QueryTagKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sql := fmt.Sprintf("desc `%s`", m.Metric)
-	results, err := QueryTSDB(sql, 4)
-	if err != nil {
-		protocol.WriteQueryResp(w, protocol.CodeExecTSDBSqlError, nil)
-		return
-	}
-
-	var tags []string
-	for _, row := range results {
-		note := row[3].(string)
-		if note == "TAG" {
-			tags = append(tags, row[0].(string))
-		}
-	}
-
-	protocol.WriteQueryResp(w, protocol.CodeOK, tags)
+	tags, code := internalQueryTagKeys(m.Metric)
+	protocol.WriteQueryResp(w, code, tags)
 }
