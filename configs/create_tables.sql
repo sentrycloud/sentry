@@ -120,8 +120,10 @@ INSERT INTO `alarm_rule` (`name`, `type`, `query_range`, `contacts`, `level`, `m
             '{"less_than": -8.0, "greater_than": 8.0, "error_count": 1}');
 
 /* create dashboard for sentry_server monitor */
-INSERT INTO `dashboard` (`name`, `creator`, `app_name`, `chart_layout`)
-    VALUES ('sentry_server monitor', 'eric', 'sentry_server', '[{"w":6,"h":4,"x":0,"y":0,"i":"1","moved":false,"static":true},{"w":6,"h":4,"x":6,"y":0,"i":"2","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":4,"i":"3","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":4,"i":"4","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":4,"i":"5","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":8,"i":"6","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":8,"i":"7","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":8,"i":"8","moved":false,"static":true}]');
+INSERT INTO `dashboard` (`name`, `creator`, `app_name`, `chart_layout`, `tag_filter`)
+    VALUES ('sentry_server monitor', 'eric', 'sentry_server',
+            '[{"w":6,"h":4,"x":0,"y":0,"i":"1","moved":false,"static":true},{"w":6,"h":4,"x":6,"y":0,"i":"2","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":4,"i":"3","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":4,"i":"4","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":4,"i":"5","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":8,"i":"6","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":8,"i":"7","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":8,"i":"8","moved":false,"static":true}]',
+            '{"metric":"sentry_server_http_qps","tags":["sentryIP"]}');
 
 INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
     VALUES (1, 'http QPS', 'line', 'sum', '10s', 10);
@@ -164,8 +166,10 @@ INSERT INTO `line` (`chart_id`, `name`, `metric`, `tags`, `offset`)
     VALUES (8, 'chan size', 'sentry_server_chan_size', '{"chan":"*"}', 0);
 
 /* create dashboard for machine monitor (cpu, memory, disk, network ...) */
-INSERT INTO `dashboard` (`name`, `creator`, `app_name`, `chart_layout`)
-    VALUES ('machine monitor', 'eric', 'sentry_agent', '[{"w":4,"h":4,"x":0,"y":0,"i":"9","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":0,"i":"10","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":0,"i":"11","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":4,"i":"12","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":4,"i":"13","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":4,"i":"14","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":8,"i":"15","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":8,"i":"16","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":8,"i":"17","moved":false,"static":true},{"w":6,"h":4,"x":0,"y":12,"i":"18","moved":false,"static":true},{"w":6,"h":4,"x":6,"y":12,"i":"19","moved":false,"static":true}]');
+INSERT INTO `dashboard` (`name`, `creator`, `app_name`, `chart_layout`, `tag_filter`)
+    VALUES ('machine monitor', 'eric', 'sentry_agent',
+            '[{"w":4,"h":4,"x":0,"y":0,"i":"9","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":0,"i":"10","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":0,"i":"11","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":4,"i":"12","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":4,"i":"13","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":4,"i":"14","moved":false,"static":true},{"w":4,"h":4,"x":0,"y":8,"i":"15","moved":false,"static":true},{"w":4,"h":4,"x":4,"y":8,"i":"16","moved":false,"static":true},{"w":4,"h":4,"x":8,"y":8,"i":"17","moved":false,"static":true},{"w":6,"h":4,"x":0,"y":12,"i":"18","moved":false,"static":true},{"w":6,"h":4,"x":6,"y":12,"i":"19","moved":false,"static":true}]',
+            '{"metric":"sentry_sys_cpu_usage","tags":["sentryIP"]}');
 
 INSERT INTO `chart` (`dashboard_id`, `name`, `type`, `aggregation`, `down_sample`, `topn_limit`)
     VALUES (2, 'cpu usage', 'line', 'max', '10s', 10);

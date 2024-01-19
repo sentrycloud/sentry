@@ -1,11 +1,15 @@
 package monitor
 
 import (
+	"fmt"
 	sentrySdk "github.com/sentrycloud/sentry-sdk-go"
+	"github.com/sentrycloud/sentry/pkg/newlog"
+	"net"
 	"time"
 )
 
 const (
+	defaultLocalIP       = "127.0.0.1"
 	appName              = "sentry_server"
 	httpQpsMetricName    = "sentry_server_http_qps"
 	httpRtMetricName     = "sentry_server_http_rt"
@@ -31,7 +35,8 @@ func InitMonitor() {
 	tags["chan"] = "resend"
 	ResendChanSizeCollector = sentrySdk.GetCollector(chanSizeMetricName, tags, sentrySdk.Avg, collectInterval)
 
-	sentrySdk.SetReportURL("http://127.0.0.1:51001/server/api/putMetrics") // report to this server
+	reportURL := fmt.Sprintf("http://%s:51001/server/api/putMetrics", getLocalIP())
+	sentrySdk.SetReportURL(reportURL) // report to self
 	sentrySdk.StartCollectGC(appName)
 }
 
@@ -47,4 +52,21 @@ func AddMonitorStats(start time.Time, api string) {
 
 	httpQpsCollector.Put(1)
 	httpRtCollector.Put(float64(rt))
+}
+
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		newlog.Info("get local ip err: ", err)
+		return defaultLocalIP
+	}
+
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return defaultLocalIP
 }
