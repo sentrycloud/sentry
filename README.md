@@ -70,16 +70,23 @@ The time series metric value represent by a pair of (timestamp, value)
 
 # Usage
 ## Dashboard
-* add a new dashboard for system metrics
-	<img src="./docs/add_dashboard.png" width="600" height="600">
-* add a new chart for the new empty dashboard
-	<img src="./docs/add_chart.png" width="400" height="400">
-* config the new chart
+1. Add a new dashboard named "system monitor", if add success it will navigate to the new created empty dashboard
+
+	<img src="./docs/add_dashboard.png" width="600" height="500">
+	
+2. In the new dashboard click the Add Chart Button, it will navigate to a config page to setup the new chart 
+	
+3. Setup the new chart configurations, after save it will navigate back to the dashboard
+
 	<img src="./docs/config_chart.png" width="600" height="500">
-* new chart in the new dashboard (add two other chart)
-	<img src="./docs/new_dashboard.png" width="600" height="600">
-* change/save chart layout, the charts in dashboard can be draged and resized
- 	<img src="./docs/change_layout.png" width="600" height="600">
+	
+4. New chart in the dashboard 
+
+	<img src="./docs/new_dashboard.png" width="600" height="500">
+	
+5. Click the change/save layout button to drag and resize the charts in the dashboard
+ 	
+ 	<img src="./docs/change_layout.png" width="600" height="500">
 
 	 	
 # Roadmap
