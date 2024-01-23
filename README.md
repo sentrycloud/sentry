@@ -52,6 +52,10 @@ After a while, you can change the dashboard list to machine monitor:
 
 <img src="./docs/dashboard_machine.png" width="800" height="600">
 
+## Sentry frontend
+The sentry frontend is at [https://github.com/sentrycloud/sentry-frontend](https://github.com/sentrycloud/sentry-frontend),
+`npm run build`, then move build direntory to frontend to update the web UI
+
 # Concepts
 ### Metric
 What you want to measure in quantity in a time series, if you want to measure server status, the the metrics are cpu, memory, disk, etc.
