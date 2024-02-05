@@ -22,10 +22,10 @@ var (
 )
 
 type LogConfig struct {
-	Path      string `json:"path"`
-	Level     string `json:"level"`
-	MaxSize   int    `json:"max_size"`
-	MaxBackup int    `json:"max_backup"`
+	Path      string `json:"path" yaml:"path"`
+	Level     string `json:"level" yaml:"level"`
+	MaxSize   int    `json:"max_size" yaml:"max_size"`
+	MaxBackup int    `json:"max_backup" yaml:"max_backup"`
 }
 
 func setStrLogLevel(level string) {
